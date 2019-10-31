@@ -9,6 +9,7 @@
  */
 
 extern struct can_module *pCAN;
+extern SemaphoreHandle_t canRxSemaphore;
 struct can_standard_message_filter_element *pHwFilters;
 struct can_extended_message_filter_element *pHwFiltersX;
 
@@ -192,10 +193,10 @@ int can_msg_get(int timeout)
 retry:
     status = can_rx_get_fifo_status(pCAN, 0);
     if ((status & 0x7f) == 0) {                /* Nothing in FIFO, wait... */
-#if 1
+#if 0
         if (ulTaskNotifyTake(pdTRUE, timeout) == 0) {
 #else
-        if (xSemaphoreTake(canRxSemaphore, timeout) == pdPASS) {
+        if (xSemaphoreTake(canRxSemaphore, timeout) == pdTRUE) {
 #endif
             goto retry;    /* re-read status to confirm that this isn't an old semaphore */
         }

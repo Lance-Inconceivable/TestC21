@@ -115,6 +115,7 @@ struct can_tx_element *pTxFIFO;
 struct can_rx_element_fifo_0 *pRxFIFO;
 static void can_rx_task(void *dummy);
 int have_reader = 0;
+SemaphoreHandle_t canRxSemaphore = (SemaphoreHandle_t) NULL;
 
 /*
  * Called by main() to create the simply blinky style application if
@@ -240,6 +241,10 @@ config_can.nonmatching_frames_action_standard = CAN_NONMATCHING_FRAMES_FIFO_0;
 #ifdef CAN_LOOPBACK
     can_enable_test_mode(pCAN);
 #endif
+
+    if ((uint32_t) canRxSemaphore == NULL)
+        canRxSemaphore = xSemaphoreCreateBinary();
+
     /* Enable CAN0 interrupt in the NVIC */
     system_interrupt_enable(SYSTEM_INTERRUPT_MODULE_CAN0);
 
@@ -503,7 +508,7 @@ void CAN0_Handler(void)
        
         /* Set the RX semaphore if this if the first msg in the FIFO */
         if (rx_fifo_status == 1 && have_reader)
-            vTaskNotifyGiveFromISR(rxTaskHandle, &xHigherPriorityTaskWoken);
+            xSemaphoreGiveFromISR(canRxSemaphore, &xHigherPriorityTaskWoken);
     }
     if (status & CAN_TX_FIFO_EMPTY) {
         can_clear_interrupt_status(pCAN, CAN_TX_FIFO_EMPTY);
