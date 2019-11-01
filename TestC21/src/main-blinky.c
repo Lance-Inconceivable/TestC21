@@ -448,6 +448,8 @@ static void do_can_ping(int count)
         index = can_msg_get(100);
         if (index < 0) 
             continue;
+        else
+            break;
     }
     if (index >= 0) {
         struct can_rx_element_fifo_0 *pMsg;
