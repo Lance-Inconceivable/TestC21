@@ -26,7 +26,7 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! stop the CAN controller\r\n"},
     {"baud", "\tbaud 250|500|1000\r\n",            CMD_BAUD,
             "\t! set the CAN baud rate\r\n"},
-    {"ping", "\tping\r\n",                         CMD_PING,
+    {"ping", "\tping <count>\r\n",                 CMD_PING,
             "\t! send 0x422 on CAN until Rx\r\n"},
     {"send", "\tsend\r\n",                         CMD_SEND,
             "\t! send one 0x422 packet\r\n"},
@@ -139,8 +139,7 @@ int16_t get_command(char *buf, uint16_t *param, uint16_t *param2)
         cmd == CMD_XCAN    || 
         cmd == CMD_READER  || 
         cmd == CMD_XREADER || 
-        cmd == CMD_SEND    || 
-        cmd == CMD_PING)
+        cmd == CMD_SEND)  
         return (cmd);
 
     switch (cmd) {              /* Switch on command */
@@ -149,6 +148,7 @@ int16_t get_command(char *buf, uint16_t *param, uint16_t *param2)
         case CMD_LOOP:
         case CMD_LED:
         case CMD_XLED:
+        case CMD_PING:
 
             token = strtok(NULL, ws2);
             rval = get_num(token, param);

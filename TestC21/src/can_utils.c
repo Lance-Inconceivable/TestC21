@@ -61,25 +61,38 @@ int can_filter_add(CAN_HW_FILTER *x)
 
 /* 
  * Remove an entry from the CAN hardware filter table.
+ * If index is -1, remove them all, excluding index = 0.
  */
-int can_filter_remove(uint8_t index, uint8_t ext)
+int can_filter_remove(int index, uint8_t ext)
 {
     if (ext) {
         struct can_extended_message_filter_element *filter = pHwFiltersX;
 
-        if (index >= CONF_CAN0_RX_STANDARD_ID_FILTER_NUM) 
-            return 1;
-
-        filter[index].F0.reg = 0;
-        filter[index].F1.reg = 0;
+        if (index != -1) {
+            if (index >= CONF_CAN0_RX_EXTENDED_ID_FILTER_NUM) 
+                return 1;
+            filter[index].F0.reg = 0;
+            filter[index].F1.reg = 0;
+        }
+        else {
+            for (index = 1; index < CONF_CAN0_RX_EXTENDED_ID_FILTER_NUM; index++) {
+                filter[index].F0.reg = 0;
+                filter[index].F1.reg = 0;
+            }
+        }
     }
     else {
         struct can_standard_message_filter_element *filter = pHwFilters;
 
-        if (index >= CONF_CAN0_RX_STANDARD_ID_FILTER_NUM) 
-            return 1;
-
-        filter[index].S0.reg = 0; 
+        if (index != -1)  {
+            if (index >= CONF_CAN0_RX_STANDARD_ID_FILTER_NUM) 
+                return 1;
+            filter[index].S0.reg = 0; 
+        }
+        else {
+            for (index = 1; index < CONF_CAN0_RX_STANDARD_ID_FILTER_NUM; index++) 
+                filter[index].S0.reg = 0;
+        }
     }
     return (0);
 }

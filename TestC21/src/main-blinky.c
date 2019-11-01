@@ -186,7 +186,7 @@ void main_blinky( void )
          /* Start the tasks and timer running. */
 	 vTaskStartScheduler();
     }
-#else / JIMMY Test!!! */
+#else /* JIMMY Test!!! */
 	 vTaskStartScheduler();
 #endif
 
@@ -242,7 +242,7 @@ config_can.nonmatching_frames_action_standard = CAN_NONMATCHING_FRAMES_FIFO_0;
     can_enable_test_mode(pCAN);
 #endif
 
-    if ((uint32_t) canRxSemaphore == NULL)
+    if (canRxSemaphore == NULL)
         canRxSemaphore = xSemaphoreCreateBinary();
 
     /* Enable CAN0 interrupt in the NVIC */
@@ -413,6 +413,55 @@ static void prvQueueSendTask( void *pvParameters )
     }
 }
 
+/* Send a packet every second for every <count> seconds
+ * or until we get a ping reply.
+ * A "ping" is SID 0x422.
+ * A reply is SID 0x423.
+ * Note: This is a Jimmy creation.  
+ */
+static void do_can_ping(int count)
+{
+    int rval;
+    union _data {
+        unsigned char data[8];
+        uint32_t counter;
+    } x;
+    CAN_HW_FILTER rx_filter;
+    int index;
+
+    /* Add a 423 filter for "ping reply" testing */
+    rx_filter.filter = 0x423;
+    rx_filter.mask = MATCH_ALL;
+    rx_filter.ext = 0;
+    can_filter_remove(-1, 0);  /* All, standard */
+    can_filter_add(&rx_filter);
+    have_reader = 1;   
+
+    memset(x.data, 0, 8);
+    x.counter = 1;
+    while (count--) {
+        x.counter++;
+        debug_msg("ping, counter = ");
+        printhex(x.counter - 1, 1);
+        rval = can_send(0x422, x.data);
+        /* Read reply.  If nothing after 1 second, continue */
+        index = can_msg_get(100);
+        if (index < 0) 
+            continue;
+    }
+    if (index >= 0) {
+        struct can_rx_element_fifo_0 *pMsg;
+        int *pData;
+        pMsg = &pRxFIFO[index];
+        pData = (int *) &pMsg->data[0];
+        debug_msg("ping reply, val = ");
+        printhex(*pData, 1);
+        can_msg_free(index);
+    }
+    else
+        debug_msg("No reply\r\n");
+}
+
 /* This is a CAN RX task
  * For now it simply reads CAN messages and throws them away.
  * In a real application, it should perform some action based
@@ -449,6 +498,9 @@ static void can_rx_task(void *dummy)
         switch (id) {
             case 0x422:
                 debug_msg("My favorite packet!\r\n");
+                /* Send 0x423 in response */
+                memcpy(can_data, &pMsg->data, 8);
+                can_send(0x423, can_data);
                 break;
             default:
                 debug_msg("RX! ID = ");
@@ -634,7 +686,7 @@ int do_help(uint32_t cmd)
 
 void do_baud(int baud)
 {
-    if (baud != 250 && baud != 500 & baud != 1000) {
+    if (baud != 250 && baud != 500 && baud != 1000) {
         debug_msg("Error: Invalid baud rate\r\n");
         return;
     }
@@ -706,6 +758,7 @@ int dispatch_cmd(char *cmd)
             do_send_loop(param);
             break;
         case CMD_PING:
+            do_can_ping(param);
             break;
         case CMD_BAUD:
             do_baud(param);
