@@ -438,7 +438,8 @@ static void do_can_ping(int count)
     have_reader = 1;   
 
     memset(x.data, 0, 8);
-    x.counter = 1;
+    x.counter = 0;
+top:
     while (count--) {
         x.counter++;
         debug_msg("ping, counter = ");
@@ -459,6 +460,8 @@ static void do_can_ping(int count)
         debug_msg("ping reply, val = ");
         printhex(*pData, 1);
         can_msg_free(index);
+        if (count)
+           goto top;
     }
     else
         debug_msg("No reply\r\n");
@@ -595,7 +598,9 @@ retry:
     val = can_tx_get_fifo_queue_status(pCAN);
     if ((val & 0x1f) == 0) {   /* FIFO full */
         if (count--) {
+#if 0
 debug_msg("Wait for FIFO!\r\n");
+#endif
             vTaskDelay(1);    /* Delay 10 msec */
             goto retry;
         }
