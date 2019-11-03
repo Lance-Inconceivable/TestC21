@@ -38,6 +38,8 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Turn on CAN read task\r\n"},
     {"xreader", "\txreader\r\n",                   CMD_XREADER,
             "\t! Turn off CAN read task\r\n"},
+    {"can_detect", "\tcan_detect\r\n",             CMD_DETECT,
+            "\t! listen for packets at various baud rates\r\n"},
     {"led", "\tled  <led number>\r\n",             CMD_LED,
             "\t! Turn on LED (TBD)\r\n"},
     {"xled", "\txled  <led number>\r\n",           CMD_XLED,
@@ -139,6 +141,7 @@ int16_t get_command(char *buf, uint16_t *param, uint16_t *param2)
         cmd == CMD_XCAN    || 
         cmd == CMD_READER  || 
         cmd == CMD_XREADER || 
+        cmd == CMD_DETECT  || 
         cmd == CMD_SEND)  
         return (cmd);
 

@@ -17,8 +17,9 @@
 #define CMD_READER 9
 #define CMD_XREADER 10
 #define CMD_SEND 11
+#define CMD_DETECT 12
 
-#define NUM_COMMANDS 11
+#define NUM_COMMANDS 12
 
 int16_t get_command(char *buf, uint16_t *param, uint16_t *param2);
 char *get_help(uint8_t cmd);

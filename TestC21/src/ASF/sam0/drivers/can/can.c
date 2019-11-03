@@ -277,8 +277,13 @@ void can_set_baudrate(Can *hw, uint32_t baudrate)
 	}
 	
 	can_nbtp_nbrp_value = gclk_can_value / baudrate / (3 + can_nbtp_ntseg1_value + can_nbtp_ntseg2_value);
-	
-	hw->NBTP.reg = CAN_NBTP_NBRP(can_nbtp_nbrp_value) |
+
+/* Jimmy, bugfix!  The value used by the controller is 1 more than the
+ * value programmed into the NBRT field.  So you must subtract 1
+ * from the calculated value above
+ */
+/* Jimmy added '-1' */
+	hw->NBTP.reg = CAN_NBTP_NBRP(can_nbtp_nbrp_value - 1) |
 			CAN_NBTP_NSJW(can_nbtp_nsgw_value) |
 			CAN_NBTP_NTSEG1(can_nbtp_ntseg1_value) |
 			CAN_NBTP_NTSEG2(can_nbtp_ntseg2_value);

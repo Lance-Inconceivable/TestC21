@@ -523,6 +523,75 @@ static void can_rx_task(void *dummy)
     }
 }
 
+int do_detect(void)
+{
+    int rval = 0;
+    int baud;
+    int index;
+    int i;
+    int ntries = 1;
+    struct can_rx_element_fifo_0 *pMsg;
+    uint32_t regval;
+    int trybaud[] = {250, 500, 1000, 0};
+
+    /* Save the global filter register */
+    regval = pCAN->hw->GFC.reg;
+
+    /* Stop CAN and put it in monitor mode */
+    can_enable_bus_monitor_mode(pCAN);
+    have_reader = 1;
+    pCAN->hw->GFC.reg = 0x3; /* promiscuous mode for std and ext */
+    while (ntries--) {
+        i = 0;
+        baud = trybaud[i++];
+        while(baud) {
+            can_set_baudrate(pCAN->hw, baud * 1000);
+            can_start(pCAN);
+            index = can_msg_get(500);   /* Wait 5 seconds for a msg */
+
+            /* Stop the CAN controller and put it in config mode */
+            can_stop(pCAN);
+            pCAN->hw->CCCR.reg |= CAN_CCCR_CCE; 
+
+            if (index >= 0) 
+                goto found;        /* Got a msg! */
+
+            baud = trybaud[i++];
+        }
+    }
+
+    /* If we get here, no bus was found */
+    rval = -1;
+    debug_msg("No CAN messages detected\r\n");
+
+found:
+    /* Read the packet in msg memory */
+    if (rval == 0) {
+        pMsg = &pRxFIFO[index];
+        if (pMsg->R0.bit.XTD) {
+            debug_msg("Got ext CAN msg, XID = ");
+            printhex(pMsg->R0.bit.ID, 1);
+        }
+        else {
+            debug_msg("Got std CAN msg, SID = ");
+            printhex((pMsg->R0.bit.ID >> 18), 1);
+        }
+        if (baud == 250)
+            debug_msg("Baud = 250\r\n");
+        else if (baud == 500)
+           debug_msg("Baud = 500\r\n");
+        else if (baud == 1000)
+           debug_msg("Baud = 1000\r\n");
+    }
+
+    can_disable_bus_monitor_mode(pCAN);
+    pCAN->hw->GFC.reg = regval; /* restore original global filter */
+    have_reader = 0;
+    can_start(pCAN);
+
+    return;
+}
+
 /*-----------------------------------------------------------*/
 
 static void prvQueueReceiveTask( void *pvParameters )
@@ -766,6 +835,9 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_PING:
             do_can_ping(param);
+            break;
+        case CMD_DETECT:
+            do_detect();
             break;
         case CMD_BAUD:
             do_baud(param);
