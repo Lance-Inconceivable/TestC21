@@ -2,3 +2,9 @@
 *.atsuo
 *.bin
 *.eep
+*.elf
+*.hex
+*.map
+*.lss
+*.srec
+.atsuo

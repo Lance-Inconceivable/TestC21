@@ -123,11 +123,6 @@ void SDADC_Handler           ( void ) __attribute__ ((weak, alias("Dummy_Handler
 void PTC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 #endif
 
-void superpig(void)
-{
-    while(1);
-}
-
 extern void xPortSysTickHandler(void);
 extern void xPortPendSVHandler(void);
 /* Exception Table */
