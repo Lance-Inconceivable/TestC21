@@ -11,11 +11,16 @@
 const char *ws1=" \t";
 const char *ws2=" \t\r\n";
 
+/* Hush compiler warnings */
+static short check_digits(char *p);
+static int16_t get_num(char *token, uint32_t *param);
+static uint8_t match_command(char *token);
+
 typedef struct _cli {
-  char *text;
-  char *help;
+  const char *text;
+  const char *help;
   uint16_t cmd;
-  char *verbose;
+  const char *verbose;
 } CLICMDS;
 
 static const
@@ -36,8 +41,6 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! show verbose help for <cmd> or brief help for all commands\r\n"},
     {"reader", "\treader\r\n",                     CMD_READER,
             "\t! Turn on CAN read task\r\n"},
-    {"xreader", "\txreader\r\n",                   CMD_XREADER,
-            "\t! Turn off CAN read task\r\n"},
     {"can_detect", "\tcan_detect\r\n",             CMD_DETECT,
             "\t! listen for packets at various baud rates\r\n"},
     {"led", "\tled  <led number>\r\n",             CMD_LED,
@@ -46,10 +49,11 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Turn off LED (TBD)\r\n"},
 };
 
+const
 char *get_help(uint8_t cmd)
 {
     uint8_t i = 0;
-    char *rval = NULL;
+    const char *rval = NULL;
 
     for (i = 0; i < NUM_COMMANDS; i++) {
        if (cmd == cli[i].cmd) {
@@ -60,10 +64,10 @@ char *get_help(uint8_t cmd)
     return (rval);
 }
 
-char *get_help_verbose(uint8_t cmd)
+const char *get_help_verbose(uint8_t cmd)
 {
     uint8_t i = 0;
-    char *rval = NULL;
+    const char *rval = NULL;
 
     for (i = 0; i < NUM_COMMANDS; i++) {
        if (cmd == cli[i].cmd) {
@@ -98,7 +102,7 @@ short check_digits(char *p)
  * Value is returned in param.
  * Failed conversion returns 1
  */
-int16_t get_num(char *token, uint16_t *param)
+int16_t get_num(char *token, uint32_t *param)
 {
     if (check_digits(token) == 0) {
         *param = atoi(token);
@@ -125,7 +129,7 @@ uint8_t match_command(char *token)
  * Return CMD value, or 0 if no command.
  * If command has a arg, return in *param.
  */
-int16_t get_command(char *buf, uint16_t *param, uint16_t *param2)
+int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
 {
     char *token = buf;
     int16_t rval = 0;
@@ -140,7 +144,6 @@ int16_t get_command(char *buf, uint16_t *param, uint16_t *param2)
         cmd == CMD_CAN     || 
         cmd == CMD_XCAN    || 
         cmd == CMD_READER  || 
-        cmd == CMD_XREADER || 
         cmd == CMD_DETECT  || 
         cmd == CMD_SEND)  
         return (cmd);

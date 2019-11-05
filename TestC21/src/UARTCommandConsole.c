@@ -100,11 +100,7 @@ static void prvUARTRxNotificationHandler( const struct usart_module *const pxUSA
 
 /* Const messages output by the command console. */
 static char * const pcWelcomeMessage = "\r\n\r\nFreeRTOS command server.\r\nType Help to view a list of registered commands.\r\n\r\n>";
-#if 0   /* Jimmy */
 static const char * const pcEndOfOutputMessage = "\r\n[Press ENTER to execute the previous command again]\r\n>";
-#else
-static const char * const pcEndOfOutputMessage = "\r\n>";
-#endif
 static const char * const pcNewLine = "\r\n";
 
 /* This semaphore is used to allow the task to wait for a Tx to complete
@@ -182,23 +178,9 @@ void debug_msg(const char *string)
     prvSendBuffer(&xCDCUsart, string, strlen(string));
 }
 
-/*
- * Print an unsigned int in hex.  If the value > 9, 
- * the number will have a leading '0x'.
- * If crlf is true, a carriage return line feed is appended.
- * outbuf must be at least 13 chars long.
- */
 void printhex(uint32_t val, int crlf)
 {
-    int len;
-    int i = 0;
-    if (val > 9) {
-       i += 2;
-       outbuf[0] = '0';
-       outbuf[1] = 'x';
-    }
-    len = ulong_to_string(val, &outbuf[i]);
-    len += i;
+    int len = ulong_to_string(val, outbuf);
     if (crlf) {
         outbuf[len++] = '\r';
         outbuf[len++] = '\n';

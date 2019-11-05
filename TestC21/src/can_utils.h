@@ -15,6 +15,9 @@ int can_filter_remove(int index, uint8_t ext);
 void can_filters_init(void);
 int can_msg_get(int timeout);
 int can_msg_free(int index);
+int can_send(uint32_t id, unsigned char *data);
+int can_utils_init(void);
+void can_reset_fifo(void);
 
 #endif
 

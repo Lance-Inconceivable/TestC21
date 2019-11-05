@@ -15,15 +15,14 @@
 #define CMD_LOOP 7
 #define CMD_XCAN 8
 #define CMD_READER 9
-#define CMD_XREADER 10
-#define CMD_SEND 11
-#define CMD_DETECT 12
+#define CMD_SEND 10
+#define CMD_DETECT 11
 
-#define NUM_COMMANDS 12
+#define NUM_COMMANDS 11
 
-int16_t get_command(char *buf, uint16_t *param, uint16_t *param2);
-char *get_help(uint8_t cmd);
-char *get_help_verbose(uint8_t cmd);
+int16_t get_command(char *buf, uint32_t *param, uint32_t *param2);
+const char *get_help(uint8_t cmd);
+const char *get_help_verbose(uint8_t cmd);
 
 
 #endif /* CLI_H_ */

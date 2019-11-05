@@ -34,6 +34,13 @@
  */
 void vUARTCommandConsoleStart( uint16_t usStackSize, unsigned portBASE_TYPE uxPriority );
 
+/* Jimmy stuff.. */
+#define CRLF 1
+void printhex(uint32_t val, int crlf);
+void debug_msg_init(void);
+void debug_msg(const char *string);
+uint16_t ulong_to_string(uint32_t number, char *ascii);
+
 #endif /* UART_COMMAND_CONSOLE_H */
 
 
