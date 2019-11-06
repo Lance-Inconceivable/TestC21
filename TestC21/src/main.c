@@ -29,11 +29,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-/* Demo app includes. */
-#if 1   /* Jimmy: Don't need for blinky? */
-#include "UARTCommandConsole.h"
-#endif
-
 /* Library includes. */
 #include <asf.h>
 

@@ -159,18 +159,18 @@ static void do_can_ping(int count)
     gHaveReader = 1;   
 
     memset(x.data, 0, 8);
-    x.counter = 0;
+    /* Put counter in payload, little endian.  Use union trick */
+    x.counter = 1;
 top:
     while (count--) {
-        x.counter++;
         debug_msg("ping, counter = ");
         printhex(x.counter - 1, CRLF);
-        /* Put counter in payload, little endian.  Use union trick */
         rval = can_send(0x422, x.data);
         if (rval)
             debug_msg("Can TX error\r\n");
         /* Read reply.  If nothing after 1 second, continue */
         index = can_msg_get(100);
+        x.counter++;
         if (index < 0) 
             continue;
         else
@@ -207,6 +207,7 @@ static void can_rx_task(void *dummy)
     rx_filter.ext = 0;
     can_filter_add(&rx_filter);
     gHaveReader = 1;
+    debug_msg("Reader task started\r\n");
     while (1) {
         /* Get a packet */
         index = can_msg_get(portMAX_DELAY);

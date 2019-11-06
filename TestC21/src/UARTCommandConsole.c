@@ -27,23 +27,16 @@
 
 /* Standard includes. */
 #include "string.h"
-#if 0
-#include "stdio.h"
-#endif
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "task.h"
-#include "queue.h"
 #include "semphr.h"
 
 /* Library includes. */
 #include "asf.h"
 
 /* Example includes. */
-#if 0  /* Jimmy, out for now */
-#include "FreeRTOS_CLI.h"
-#endif
 #include "UARTCommandConsole.h"
 
 /* Dimensions the buffer into which input characters are placed. */
@@ -75,13 +68,6 @@ static void prvUARTCommandConsoleTask( void *pvParameters );
  */
 static void prvSendBuffer(struct usart_module *pxCDCUsart, const char * pcBuffer, size_t xBufferLength);
 
-#if 0  /* Jimmy */
-/*
- * Register the 'standard' sample CLI commands with FreeRTOS+CLI.
- */
-extern void vRegisterSampleCLICommands( void );
-#endif
-
 /*
  * Configure the UART used for IO.and register prvUARTRxNotificationHandler()
  * to handle UART Rx events.
@@ -100,7 +86,7 @@ static void prvUARTRxNotificationHandler( const struct usart_module *const pxUSA
 
 /* Const messages output by the command console. */
 static char * const pcWelcomeMessage = "\r\n\r\nFreeRTOS command server.\r\nType Help to view a list of registered commands.\r\n\r\n>";
-static const char * const pcEndOfOutputMessage = "\r\n[Press ENTER to execute the previous command again]\r\n>";
+static const char * const pcEndOfOutputMessage = "\r\n>";
 static const char * const pcNewLine = "\r\n";
 
 /* This semaphore is used to allow the task to wait for a Tx to complete
@@ -110,25 +96,18 @@ static SemaphoreHandle_t xTxCompleteSemaphore = NULL;
 /* This semaphore is sued to allow the task to wait for an Rx to complete
 without wasting any CPU time. */
 static SemaphoreHandle_t xRxCompleteSemaphore = NULL;
-TaskHandle_t ConsoleTaskHandle;
-/* This is a temporary hack... until there's a TX task */
-extern TaskHandle_t txTaskHandle;
 
 /*-----------------------------------------------------------*/
 
 void vUARTCommandConsoleStart( uint16_t usStackSize, unsigned portBASE_TYPE uxPriority )
 {
-#if 0  /* Jimmy */
-	vRegisterSampleCLICommands();
-#endif
-
     /* Create that task that handles the console itself. */
     xTaskCreate(prvUARTCommandConsoleTask, /* Task entry point. */
         "CLI",	                           /* Task name */
         usStackSize,                       /* Stack size */
         NULL,	                           /* Task parameter, unused. */
         uxPriority,	                   /* Task priority. */
-        &ConsoleTaskHandle         /* Added by Jimmy */
+        NULL                               /* Task Handle unused */
     );
 }
 /*-----------------------------------------------------------*/
@@ -190,35 +169,16 @@ void printhex(uint32_t val, int crlf)
 
 static void prvUARTCommandConsoleTask( void *pvParameters )
 {
-    char cRxedChar, *pcOutputString;
+    char cRxedChar;
     uint8_t ucInputIndex = 0;
     static char cInputString[cmdMAX_INPUT_SIZE], cLastInputString[cmdMAX_INPUT_SIZE];
-    portBASE_TYPE xReturned;
     int rval = 1;
-#if 0
-    static struct usart_module xCDCUsart; /* Static so it doesn't take up too much stack. */
-#endif
 
     ( void ) pvParameters;
-
-/* Jimmy, superhack */
-txTaskHandle = ConsoleTaskHandle;
-
-#if 0
-    /* A UART is used for printf() output and CLI input and output.  Note there
-        is no mutual exclusion on the UART, but the demo as it stands does not
-        require mutual exclusion.  */
-
-    prvConfigureUART( &xCDCUsart );
-#endif
 
     /* Obtain the address of the output buffer.  Note there is no mutual
 	exclusion on this buffer as it is assumed only one command console
 	interface will be used at any one time. */
-
-#if 0
-    pcOutputString = FreeRTOS_CLIGetOutputBuffer();
-#endif
 
     /* Send the welcome message. */
     prvSendBuffer(&xCDCUsart, pcWelcomeMessage, strlen(pcWelcomeMessage));
@@ -243,32 +203,22 @@ txTaskHandle = ConsoleTaskHandle;
                 /* See if the command is empty, indicating that the last 
                     command is to be executed again. */
 
+#if 0 /* Jimmy: disable command repeat */
                 if (ucInputIndex == 0) {
                    /* Copy the last command back into the input string. */
                    if (rval == 0)
                        strcpy(cInputString, cLastInputString);
                 }
+#endif
 
                 /* Pass the received command to the command interpreter.  The
                     command interpreter is called repeatedly until it returns pdFALSE
                     (indicating there is no more output) as it might generate more than
                     one string. */
 
-#if 0
-                do {
-                    /* Get the next output string from the command interpreter. */
-                    xReturned = FreeRTOS_CLIProcessCommand(cInputString, pcOutputString,
-                        configCOMMAND_INT_MAX_OUTPUT_SIZE);
-
-                    /* Write the generated string to the UART. */
-                    prvSendBuffer(&xCDCUsart, pcOutputString, strlen(pcOutputString));
-
-                } while(xReturned != pdFALSE);
-#else
                 /* Jimmy's dispatcher */
 
                 rval = dispatch_cmd(cInputString);
-#endif
 
                 /* All the strings generated by the input command have been sent.
                     Clear the input string ready to receive the next command.  Remember
