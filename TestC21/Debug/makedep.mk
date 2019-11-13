@@ -4,6 +4,8 @@
 
 src\ASF\sam0\drivers\can\can.c
 
+src\ASF\sam0\drivers\nvm\nvm.c
+
 src\can_utils.c
 
 src\cli.c
