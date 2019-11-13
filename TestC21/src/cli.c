@@ -42,7 +42,11 @@ CLICMDS cli[NUM_COMMANDS] = {
     {"reader", "\treader\r\n",                     CMD_READER,
             "\t! Turn on CAN read task\r\n"},
     {"can_detect", "\tcan_detect\r\n",             CMD_DETECT,
-            "\t! listen for packets at various baud rates\r\n"},
+            "\t! Listen for packets at various baud rates\r\n"},
+    {"nvm", "\tnvm\r\n",                           CMD_NVM,
+            "\t! Initialize the NVM controller\r\n"},
+    {"eep", "\teep\r\n",                           CMD_EEP,
+            "\t! Test read/write/erase of RWWEE area\r\n"},
     {"led", "\tled  <led number>\r\n",             CMD_LED,
             "\t! Turn on LED (TBD)\r\n"},
     {"xled", "\txled  <led number>\r\n",           CMD_XLED,
@@ -145,6 +149,8 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_XCAN    || 
         cmd == CMD_READER  || 
         cmd == CMD_DETECT  || 
+        cmd == CMD_NVM     || 
+        cmd == CMD_EEP     || 
         cmd == CMD_SEND)  
         return (cmd);
 

@@ -68,7 +68,7 @@ struct can_module *pCAN = &can_instance;
 
 void main_blinky( void )
 {
-    vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 3, tskIDLE_PRIORITY);
+    vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
     /* Initialize "stdio" */
     debug_msg_init();
 
@@ -130,6 +130,23 @@ static void do_can_init(void)
 #endif
     can_start(pCAN);
     debug_msg("CAN started!\r\n");
+
+/* Test hack... dump the OTP area */
+    {
+        uint32_t *p = (uint32_t *) NVMCTRL_OTP1;
+        int i;
+        debug_msg("OTP area at ");
+        printhex((uint32_t) p, CRLF);
+        for (i = 0; i < 10; i++)
+            printhex(*p++, CRLF);
+    }
+    {
+        uint32_t *p = (uint32_t *) 0x00400000;
+        int i;
+        debug_msg("RWWEE area: ");
+        for (i = 0; i < 10; i++)
+            printhex(*p++, CRLF);
+    }
 }
 
 
@@ -377,6 +394,57 @@ int do_send_loop(uint32_t n)
     return (rval);
 }
 
+static
+void dump_fuses(void)
+{
+    volatile uint32_t *p = (uint32_t *) 0x00804000;
+    debug_msg("fuses : ");
+    printhex(*p++, 0);
+    printhex(*p++, CRLF);
+}
+
+static
+int do_nvm_init(int manual)
+{
+    struct nvm_config nvm;
+    struct nvm_parameters params;
+
+    /* Initialize the NVM controller */
+    nvm_get_config_defaults(&nvm);
+    if (manual)
+        nvm.manual_page_write = true;
+    else
+        nvm.manual_page_write = false;
+    nvm_set_config(&nvm);
+
+    /* Dump some NVM params */
+    nvm_get_parameters(&params);
+    debug_msg("Number of pages = ");
+    printhex(params.rww_eeprom_number_of_pages, CRLF);
+    debug_msg("Page size = ");
+    printhex(params.page_size, CRLF);
+
+    dump_fuses();
+
+    debug_msg("RWWEE first word : ");
+    printhex(* (uint32_t *) NVMCTRL_RWW_EEPROM_ADDR, CRLF);
+    return (0);
+}
+
+static
+void do_eep(void)
+{
+     char buffer[65];
+     uint16_t *p = (uint16_t *) (NVMCTRL_RWW_EEPROM_ADDR + 256); 
+     int i;
+     nvm_erase_row((uint32_t) p);
+     strcpy(buffer, "deadbeefbabebabedeadbeefbabebabedeadbeefbabebabedeadbeefbabebabe");
+     nvm_write_buffer((uint32_t) p, buffer, 64);
+     nvm_write_buffer(((uint32_t) p) + 64, buffer, 64);
+     for (i = 0; i < 40; i++)
+        printhex(*p++, 1);
+}
+
 int do_help(uint32_t cmd)
 {
     int i;
@@ -452,6 +520,13 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_BAUD:
             do_baud(param);
+            break;
+        case CMD_NVM:
+            do_nvm_init(1);
+            break;
+        case CMD_EEP:
+            do_nvm_init(1);
+            do_eep();
             break;
 #if 0  /* TBD */
         case CMD_LED:
