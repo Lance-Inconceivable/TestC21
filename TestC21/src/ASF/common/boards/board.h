@@ -158,6 +158,7 @@ extern "C" {
 #define SAMR30_MODULE_XPLAINED_PRO 102 //!< SAM R30 Module Xplained Pro board.
 #define SAMR21G18_MODULE           103 //!< SAMR21G18-MR210UA Module.
 #define SAMR21B18_MODULE           104 //!< SAMR21B18-MZ210PA Module.
+#define SENSORDEV USER_BOARD
 //! @}
 
 /*! \name Extension Boards
@@ -384,7 +385,7 @@ extern "C" {
 #  include "samr34_xplained_pro/samr34_xplained_pro.h"
 #elif BOARD == USER_BOARD
 // User-reserved area: #include the header file of your board here (if any).
-#  include "user_board.h"
+#  include "sensordev/sensordev.h"
 #elif BOARD == DUMMY_BOARD
 #  include "dummy/dummy_board.h"
 #elif BOARD == SAMB11ZR_SENSOR_TAG

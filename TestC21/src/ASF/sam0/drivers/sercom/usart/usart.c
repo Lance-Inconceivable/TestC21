@@ -39,6 +39,14 @@
 #  include "usart_interrupt.h"
 #endif
 
+/* Jimmy bugfix... hack out SERCOM5 for samc21e */
+#if (SAMC21)
+#ifdef _SAMC21E18A_
+/* There is no SERCOM5 on the E chip. */
+#define	SERCOM5_GCLK_ID_CORE 0
+#endif
+#endif
+
 /**
  * \internal
  * Set Configuration of the USART module

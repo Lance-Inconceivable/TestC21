@@ -2,6 +2,8 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+src\ASF\sam0\boards\sensordev\board_init.c
+
 src\ASF\sam0\drivers\can\can.c
 
 src\ASF\sam0\drivers\nvm\nvm.c
@@ -49,8 +51,6 @@ src\main-blinky.c
 src\main.c
 
 src\ASF\common\utils\interrupt\interrupt_sam_nvic.c
-
-src\ASF\sam0\boards\samc21_xplained_pro\board_init.c
 
 src\ASF\sam0\drivers\port\port.c
 
