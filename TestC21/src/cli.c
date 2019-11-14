@@ -48,9 +48,9 @@ CLICMDS cli[NUM_COMMANDS] = {
     {"eep", "\teep\r\n",                           CMD_EEP,
             "\t! Test read/write/erase of RWWEE area\r\n"},
     {"led", "\tled  <led number>\r\n",             CMD_LED,
-            "\t! Turn on LED (TBD)\r\n"},
+            "\t! Turn on LED (1-green, 2-red)\r\n"},
     {"xled", "\txled  <led number>\r\n",           CMD_XLED,
-            "\t! Turn off LED (TBD)\r\n"},
+            "\t! Turn off LED (1-green, 2-red)\r\n"},
 };
 
 const

@@ -53,6 +53,14 @@ void system_board_init(void);
 #define LED0_INACTIVE             !LED0_ACTIVE
 /** @} */
 
+#define GREEN_LED_PIN             PIN_PA17
+#define LED0_ACTIVE               false
+#define LED0_INACTIVE             !LED0_ACTIVE
+
+#define RED_LED_PIN               PIN_PA19
+#define LED0_ACTIVE               false
+#define LED0_INACTIVE             !LED0_ACTIVE
+
 #if 0
 /** \name SW0 definitions
  *  @{ */
@@ -89,7 +97,8 @@ void system_board_init(void);
 /** @} */
 
 /** Number of on-board LEDs */
-#define LED_COUNT                 1
+/* Jimmy: 2 user LEDs.  Heartbeat led LED0, not included in count */
+#define LED_COUNT                 2
 
 
 /**

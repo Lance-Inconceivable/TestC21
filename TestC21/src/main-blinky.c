@@ -71,6 +71,8 @@ void main_blinky( void )
     vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
     /* Initialize "stdio" */
     debug_msg_init();
+    port_pin_set_output_level(RED_LED_PIN, false);
+    port_pin_set_output_level(GREEN_LED_PIN, false);
 
     vTaskStartScheduler();
 
@@ -431,6 +433,20 @@ int do_nvm_init(int manual)
     return (0);
 }
 
+static 
+int do_led(int num, int on)
+{
+    int pin;
+    if (num > LED_COUNT || num < 1)
+        debug_msg("LED number out of range\r\n");
+    if (num == 1)
+        pin = GREEN_LED_PIN;
+    else
+        pin = RED_LED_PIN;
+
+    port_pin_set_output_level(pin, on);
+}
+
 static
 void do_eep(void)
 {
@@ -528,12 +544,12 @@ int dispatch_cmd(char *cmd)
             do_nvm_init(1);
             do_eep();
             break;
-#if 0  /* TBD */
         case CMD_LED:
+            do_led(param, 1);
             break;
         case CMD_XLED:
+            do_led(param, 0);
             break;
-#endif
         default:
             rval = -1;
             do_help(0);
