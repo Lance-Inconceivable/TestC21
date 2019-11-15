@@ -53,6 +53,8 @@ static int do_send_loop(uint32_t n);
 static int do_help(uint32_t cmd);
 static int do_baud(int baud);
 
+static gCanInit = 0;
+
 /*
  * Called by main() to create the simply blinky style application if
  * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 1.
@@ -86,6 +88,12 @@ void main_blinky( void )
         ;
 }
 
+static void can_transceiver_enable(void)
+{
+    port_pin_set_output_level(CAN_STANDBY_PIN, false);
+    port_pin_set_output_level(CAN_SILENTMODE_PIN, true);
+}
+
 static void do_can_pinmux(void)
 {
     struct system_pinmux_config pin_config;
@@ -102,6 +110,7 @@ static void do_can_init(void)
     struct can_config config_can;
 
     do_can_pinmux();
+    can_transceiver_enable();
 
     /* Initialize the CAN driver */
     /* Note:  the default CAN config uses GCLK 8, so be sure to turn it on in conf_clocks.h */
@@ -132,23 +141,7 @@ static void do_can_init(void)
 #endif
     can_start(pCAN);
     debug_msg("CAN started!\r\n");
-
-/* Test hack... dump the OTP area */
-    {
-        uint32_t *p = (uint32_t *) NVMCTRL_OTP1;
-        int i;
-        debug_msg("OTP area at ");
-        printhex((uint32_t) p, CRLF);
-        for (i = 0; i < 10; i++)
-            printhex(*p++, CRLF);
-    }
-    {
-        uint32_t *p = (uint32_t *) 0x00400000;
-        int i;
-        debug_msg("RWWEE area: ");
-        for (i = 0; i < 10; i++)
-            printhex(*p++, CRLF);
-    }
+    gCanInit = 1;
 }
 
 
@@ -168,6 +161,9 @@ static void do_can_ping(int count)
     } x;
     CAN_HW_FILTER rx_filter;
     int index;
+
+    if (gCanInit == 0)
+        do_can_init();
 
     /* Add a 423 filter for "ping reply" testing */
     rx_filter.filter = 0x423;
@@ -220,6 +216,10 @@ static void can_rx_task(void *dummy)
     unsigned int id;
     struct can_rx_element_fifo_0 *pMsg;
     CAN_HW_FILTER rx_filter;
+
+    if (gCanInit == 0)
+        do_can_init();
+
     /* Add a 422 filter for testing */
     rx_filter.filter = 0x422;
     rx_filter.mask = MATCH_ALL;
@@ -280,6 +280,9 @@ int do_detect(void)
     struct can_rx_element_fifo_0 *pMsg;
     uint32_t regval;
     int trybaud[] = {250, 500, 0};
+
+    if (gCanInit == 0)
+        do_can_init();
 
     /* Save the global filter register */
     regval = pCAN->hw->GFC.reg;
@@ -349,6 +352,8 @@ int do_send_loop(uint32_t n)
 #ifdef CAN_LOOPBACK
     CAN_HW_FILTER rx_filter;
     static char add_filter = 1;
+    if (gCanInit == 0)
+        do_can_init();
     if (add_filter) {
         add_filter--;
         rx_filter.filter = 0x422;
@@ -356,6 +361,9 @@ int do_send_loop(uint32_t n)
         rx_filter.ext = 0;
         rval = can_filter_add(&rx_filter);
     }
+#else
+    if (gCanInit == 0)
+        do_can_init();
 #endif
     while (n--) {
         memset(can_data, 0, 8);
@@ -437,14 +445,17 @@ static
 int do_led(int num, int on)
 {
     int pin;
-    if (num > LED_COUNT || num < 1)
+    if (num > LED_COUNT || num < 1) {
         debug_msg("LED number out of range\r\n");
+        return (-1);
+    }
     if (num == 1)
         pin = GREEN_LED_PIN;
     else
         pin = RED_LED_PIN;
 
     port_pin_set_output_level(pin, on);
+    return (0);
 }
 
 static

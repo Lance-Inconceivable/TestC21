@@ -61,6 +61,20 @@ void system_board_init(void)
 	port_pin_set_config(RED_LED_PIN, &pin_conf);
 	port_pin_set_output_level(RED_LED_PIN, true);
 
+        /* CAN */
+        /* Pins are active low.
+         * The code below puts transceiver in standby mode
+         * and disables silent mode.
+         */
+	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
+	port_pin_set_config(CAN_STANDBY_PIN, &pin_conf);
+	port_pin_set_output_level(CAN_STANDBY_PIN, true);
+
+        /* Microchip recommends silent mode set high when in standby */
+	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
+	port_pin_set_config(CAN_SILENTMODE_PIN, &pin_conf);
+	port_pin_set_output_level(CAN_SILENTMODE_PIN, true);
+
 #if 0
 	/* Set buttons as inputs */
 	pin_conf.direction  = PORT_PIN_DIR_INPUT;

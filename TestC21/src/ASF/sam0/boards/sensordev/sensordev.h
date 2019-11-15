@@ -54,12 +54,11 @@ void system_board_init(void);
 /** @} */
 
 #define GREEN_LED_PIN             PIN_PA17
-#define LED0_ACTIVE               false
-#define LED0_INACTIVE             !LED0_ACTIVE
-
 #define RED_LED_PIN               PIN_PA19
-#define LED0_ACTIVE               false
-#define LED0_INACTIVE             !LED0_ACTIVE
+
+/* pins are active low */
+#define CAN_SILENTMODE_PIN        PIN_PA22    
+#define CAN_STANDBY_PIN           PIN_PA23
 
 #if 0
 /** \name SW0 definitions
