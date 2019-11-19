@@ -4,9 +4,17 @@
 
 src\ASF\sam0\boards\sensordev\board_init.c
 
+src\ASF\sam0\drivers\adc\adc_sam_l_c\adc.c
+
+src\ASF\sam0\drivers\adc\adc_sam_l_c\adc_callback.c
+
 src\ASF\sam0\drivers\can\can.c
 
 src\ASF\sam0\drivers\nvm\nvm.c
+
+src\ASF\sam0\drivers\sdadc\sdadc.c
+
+src\ASF\sam0\drivers\sdadc\sdadc_callback.c
 
 src\can_utils.c
 

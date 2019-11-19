@@ -75,6 +75,13 @@ void system_board_init(void)
 	port_pin_set_config(CAN_SILENTMODE_PIN, &pin_conf);
 	port_pin_set_output_level(CAN_SILENTMODE_PIN, true);
 
+	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
+	port_pin_set_config(SR_CLK_PIN, &pin_conf);
+	port_pin_set_output_level(SR_CLK_PIN, false);
+
+	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
+	port_pin_set_config(SR_LATCH_PIN, &pin_conf);
+	port_pin_set_output_level(SR_LATCH_PIN, false);
 #if 0
 	/* Set buttons as inputs */
 	pin_conf.direction  = PORT_PIN_DIR_INPUT;

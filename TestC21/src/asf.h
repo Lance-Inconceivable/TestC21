@@ -52,6 +52,10 @@
  * running the ASF driver selector tool. Any changes will be discarded.
  */
 
+// From module: ADC - Analog-to-Digital Converter (Callback APIs)
+#include <adc.h>
+#include <adc_callback.h>
+
 // From module: CAN - Control Area Network Controller
 #include <can.h>
 
@@ -90,6 +94,10 @@
 
 // From module: Part identification macros
 #include <parts.h>
+
+// From module: SDADC - Sigma-Delta Analog-to-Digital Converter (Callback APIs)
+#include <sdadc.h>
+#include <sdadc_callback.h>
 
 // From module: SERCOM Callback API
 #include <sercom.h>

@@ -56,9 +56,13 @@ void system_board_init(void);
 #define GREEN_LED_PIN             PIN_PA17
 #define RED_LED_PIN               PIN_PA19
 
-/* pins are active low */
 #define CAN_SILENTMODE_PIN        PIN_PA22    
 #define CAN_STANDBY_PIN           PIN_PA23
+
+#define SR_CLEAR_PIN              RED_LED_PIN
+#define SR_DATA_PIN               GREEN_LED_PIN
+#define SR_CLK_PIN                PIN_PA27
+#define SR_LATCH_PIN              PIN_PA28
 
 #if 0
 /** \name SW0 definitions

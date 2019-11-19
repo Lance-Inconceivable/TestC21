@@ -55,6 +55,8 @@ static int do_baud(int baud);
 
 static gCanInit = 0;
 
+static uint8_t gGenSelect = 0;
+
 /*
  * Called by main() to create the simply blinky style application if
  * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 1.
@@ -486,6 +488,90 @@ int do_help(uint32_t cmd)
     return (0);
 }
 
+static void sr_strobe()
+{
+    port_pin_set_output_level(SR_CLK_PIN, 1);
+    port_pin_set_output_level(SR_CLK_PIN, 0);
+}
+
+int do_shift(unsigned int val)
+{
+    uint8_t mask = 0x80;
+    uint8_t x = val;
+    uint8_t i;
+
+    if (val > 0xff) {
+        debug_msg("Error: not an 8-bit value\r\n");
+        return (-1);
+    }
+    
+    /* Clear the register */
+    port_pin_set_output_level(SR_CLEAR_PIN, 0);
+    sr_strobe();
+    port_pin_set_output_level(SR_CLEAR_PIN, 1);
+
+    for (i = 0; i < 8; i++) {
+        port_pin_set_output_level(SR_DATA_PIN, (x & mask) ? 1 : 0);
+        sr_strobe();
+        mask >>= 1;
+    }
+
+    port_pin_set_output_level(SR_LATCH_PIN, 1);
+    sr_strobe();
+    port_pin_set_output_level(SR_LATCH_PIN, 0);
+}
+
+do_gen_select(int ain, int r)
+{
+    uint8_t bit;
+    uint8_t leftshift;
+    uint8_t mask;
+    unsigned int arg;
+
+    if (ain < 0 || ain > 3) {
+        debug_msg("Invalid analog input number\r\n");
+        return (-1);
+    }
+    
+    if (r != 2 && r != 10) {
+        debug_msg("Invalid resistance value\r\n");
+        return (-1);
+    }
+
+    if (r == 10)
+       bit = 1;
+    else
+       bit = 2;
+
+    leftshift = 2 * ain;
+    mask = 3 << leftshift;
+    gGenSelect &= ~mask;
+    gGenSelect |= (bit << leftshift);
+    arg = ~gGenSelect;
+    arg &= 0xff;
+    do_shift(arg);
+}
+
+do_xgen(int ain)
+{
+    uint8_t bit;
+    uint8_t leftshift;
+    uint8_t mask;
+    unsigned int arg;
+
+    if (ain < 0 || ain > 3) {
+        debug_msg("Invalid analog input number\r\n");
+        return (-1);
+    }
+
+    leftshift = 2 * ain;
+    mask = 3 << leftshift;
+    gGenSelect &= ~mask;
+    arg = ~gGenSelect;
+    arg &= 0xff;
+    do_shift(arg);
+}
+
 int do_baud(int baud)
 {
     if (baud != 250 && baud != 500 && baud != 1000) {
@@ -560,6 +646,15 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_XLED:
             do_led(param, 0);
+            break;
+        case CMD_SHIFT:
+            do_shift(param);
+            break;
+        case CMD_GEN:
+            do_gen_select(param, param2);
+            break;
+        case CMD_XGEN:
+            do_xgen(param);
             break;
         default:
             rval = -1;

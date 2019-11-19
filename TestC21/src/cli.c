@@ -51,6 +51,12 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Turn on LED (1-green, 2-red)\r\n"},
     {"xled", "\txled  <led number>\r\n",           CMD_XLED,
             "\t! Turn off LED (1-green, 2-red)\r\n"},
+    {"shift", "\tshift  <value>\r\n",              CMD_SHIFT,
+            "\t! Put an 8-bit <value> in the shift register\r\n"},
+    {"gen", "\tgen  <analog_input_num> <K-ohms> \r\n", CMD_GEN,
+            "\t! Put 2 or 10 Kohms reistance on analogg input 0-3\r\n"},
+    {"xgen", "\txgen  <analog_input_num>\r\n",      CMD_XGEN,
+            "\t! Disable resistance on analog input 0-3\r\n"},
 };
 
 const
@@ -156,11 +162,31 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
 
     switch (cmd) {              /* Switch on command */
 
+        case CMD_GEN:
+
+            token = strtok(NULL, ws1);
+            rval = get_num(token, param);
+
+            if (rval) {
+                cmd = 0;
+                break;
+            }
+
+            token = strtok(NULL, ws2);
+            rval = get_num(token, param2);
+
+            if (rval) 
+                cmd = 0;
+            
+            break;
+
         case CMD_BAUD:
         case CMD_LOOP:
         case CMD_LED:
         case CMD_XLED:
         case CMD_PING:
+        case CMD_SHIFT:
+        case CMD_XGEN:
 
             token = strtok(NULL, ws2);
             rval = get_num(token, param);

@@ -19,8 +19,11 @@
 #define CMD_DETECT 11
 #define CMD_NVM  12
 #define CMD_EEP 13
+#define CMD_SHIFT 14
+#define CMD_GEN   15
+#define CMD_XGEN  16
 
-#define NUM_COMMANDS 13
+#define NUM_COMMANDS 16
 
 int16_t get_command(char *buf, uint32_t *param, uint32_t *param2);
 const char *get_help(uint8_t cmd);
