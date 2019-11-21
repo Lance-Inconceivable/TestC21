@@ -2,6 +2,8 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+src\adctest.c
+
 src\ASF\sam0\boards\sensordev\board_init.c
 
 src\ASF\sam0\drivers\adc\adc_sam_l_c\adc.c

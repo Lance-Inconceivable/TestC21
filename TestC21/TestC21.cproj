@@ -703,6 +703,9 @@
     <Folder Include="src\config\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\adctest.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\sam0\boards\sensordev\board_init.c">
       <SubType>compile</SubType>
     </Compile>

@@ -57,6 +57,8 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Put 2 or 10 Kohms reistance on analogg input 0-3\r\n"},
     {"xgen", "\txgen  <analog_input_num>\r\n",      CMD_XGEN,
             "\t! Disable resistance on analog input 0-3\r\n"},
+    {"adctest", "\tadctest\r\n",                    CMD_ADCTEST,
+            "\t! Run ADC test - Voltage divider into AIN8\r\n"},
 };
 
 const
@@ -157,6 +159,7 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_DETECT  || 
         cmd == CMD_NVM     || 
         cmd == CMD_EEP     || 
+        cmd == CMD_ADCTEST || 
         cmd == CMD_SEND)  
         return (cmd);
 

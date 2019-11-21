@@ -572,6 +572,30 @@ do_xgen(int ain)
     do_shift(arg);
 }
 
+extern uint16_t adc_result_buffer[];
+extern void configure_adc(void);
+extern void configure_adc_callbacks(void);
+extern void adc_run(void);
+extern void adc_wait(void);
+
+static
+void do_adctest(void)
+{
+   int i;
+   configure_adc();
+   configure_adc_callbacks();
+   adc_run();
+   adc_wait();
+
+   /* When we get here, the result_buffer should contain
+    * 128 16-bit samples
+    * Print a few of them.
+    */
+   debug_msg("ADC results\r\n");
+   for (i = 0; i < 10; i++)
+       printhex(adc_result_buffer[i], CRLF);
+}
+
 int do_baud(int baud)
 {
     if (baud != 250 && baud != 500 && baud != 1000) {
@@ -655,6 +679,9 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_XGEN:
             do_xgen(param);
+            break;
+        case CMD_ADCTEST:
+            do_adctest();
             break;
         default:
             rval = -1;

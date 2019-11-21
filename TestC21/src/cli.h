@@ -22,8 +22,9 @@
 #define CMD_SHIFT 14
 #define CMD_GEN   15
 #define CMD_XGEN  16
+#define CMD_ADCTEST 17
 
-#define NUM_COMMANDS 16
+#define NUM_COMMANDS 17
 
 int16_t get_command(char *buf, uint32_t *param, uint32_t *param2);
 const char *get_help(uint8_t cmd);

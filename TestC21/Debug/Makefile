@@ -113,6 +113,7 @@ SUBDIRS :=  \
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../src/adctest.c \
 ../src/ASF/sam0/boards/sensordev/board_init.c \
 ../src/ASF/sam0/drivers/adc/adc_sam_l_c/adc.c \
 ../src/ASF/sam0/drivers/adc/adc_sam_l_c/adc_callback.c \
@@ -157,6 +158,7 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+src/adctest.o \
 src/ASF/sam0/boards/sensordev/board_init.o \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc.o \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc_callback.o \
@@ -194,6 +196,7 @@ src/ASF/sam0/utils/cmsis/samc21/source/gcc/startup_samc21.o \
 src/ASF/sam0/utils/syscalls/gcc/syscalls.o
 
 OBJS_AS_ARGS +=  \
+src/adctest.o \
 src/ASF/sam0/boards/sensordev/board_init.o \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc.o \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc_callback.o \
@@ -231,6 +234,7 @@ src/ASF/sam0/utils/cmsis/samc21/source/gcc/startup_samc21.o \
 src/ASF/sam0/utils/syscalls/gcc/syscalls.o
 
 C_DEPS +=  \
+src/adctest.d \
 src/ASF/sam0/boards/sensordev/board_init.d \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc.d \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc_callback.d \
@@ -268,6 +272,7 @@ src/ASF/sam0/utils/cmsis/samc21/source/gcc/startup_samc21.d \
 src/ASF/sam0/utils/syscalls/gcc/syscalls.d
 
 C_DEPS_AS_ARGS +=  \
+src/adctest.d \
 src/ASF/sam0/boards/sensordev/board_init.d \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc.d \
 src/ASF/sam0/drivers/adc/adc_sam_l_c/adc_callback.d \
@@ -319,6 +324,13 @@ LINKER_SCRIPT_DEP+=  \
 
 
 # AVR32/GNU C Compiler
+src/adctest.o: ../src/adctest.c
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU C Compiler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE)  -x c -mthumb -D__SAMC21E18A__ -DDEBUG -D__FREERTOS__ -D__SAMC21E18A__ -DBOARD=SENSORDEV -DARM_MATH_CM0PLUS=true -DUSART_CALLBACK_MODE=true -DADC_CALLBACK_MODE=true -DSDADC_CALLBACK_MODE=true  -I"../src/ASF/common/boards" -I"../src/ASF/sam0/utils" -I"../src/ASF/sam0/utils/header_files" -I"../src/ASF/sam0/utils/preprocessor" -I"../src/ASF/thirdparty/CMSIS/Include" -I"../src/ASF/thirdparty/CMSIS/Lib/GCC" -I"../src/ASF/common/utils" -I"../src/ASF/sam0/utils/cmsis/samc21/include" -I"../src/ASF/sam0/utils/cmsis/samc21/source" -I"../src/ASF/sam0/drivers/port" -I"../src/ASF/sam0/drivers/system/pinmux" -I"../src/ASF/sam0/drivers/system" -I"../src/ASF/sam0/drivers/system/clock" -I"../src/ASF/sam0/drivers/system/clock/clock_samc20_c21" -I"../src/ASF/sam0/drivers/system/interrupt" -I"../src/ASF/sam0/drivers/system/interrupt/system_interrupt_samc20_c21" -I"../src/ASF/sam0/drivers/system/power" -I"../src/ASF/sam0/drivers/system/power/power_sam_c" -I"../src/ASF/sam0/drivers/system/reset" -I"../src/ASF/sam0/drivers/system/reset/reset_sam_c" -I"../src/ASF/sam0/boards" -I"../src/ASF/sam0/boards/samc21_xplained_pro" -I"../src" -I"../src/config" -I"../src/ASF/thirdparty/freertos/freertos-10.0.0/Source/include" -I"../src/ASF/thirdparty/freertos/freertos-10.0.0/Source/portable/GCC/ARM_CM0" -I"../src/ASF/sam0/drivers/sercom" -I"../src/ASF/sam0/drivers/sercom/usart" -I"../src/ASF/common/services/serial" -I"../src/ASF/sam0/drivers/can" -I"../src/ASF/sam0/drivers/nvm" -I"../src/ASF/sam0/drivers/adc" -I"../src/ASF/sam0/drivers/adc/adc_sam_l_c" -I"../src/ASF/sam0/drivers/sdadc"  -O0 -fdata-sections -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m0plus -c -pipe -fno-strict-aliasing -Wall -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -std=gnu99 -ffunction-sections -fdata-sections -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int -Wmain -Wparentheses -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef -Wshadow -Wbad-function-cast -Wwrite-strings -Wsign-compare -Waggregate-return  -Wmissing-declarations -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations -Wpacked -Wredundant-decls -Wnested-externs -Wlong-long -Wunreachable-code -Wcast-align --param max-inline-insns-single=500 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
 src/ASF/sam0/boards/sensordev/board_init.o: ../src/ASF/sam0/boards/sensordev/board_init.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 6.3.1
