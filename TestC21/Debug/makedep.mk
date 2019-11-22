@@ -12,11 +12,23 @@ src\ASF\sam0\drivers\adc\adc_sam_l_c\adc_callback.c
 
 src\ASF\sam0\drivers\can\can.c
 
+src\ASF\sam0\drivers\freqm\freqm.c
+
+src\ASF\sam0\drivers\freqm\freqm_callback.c
+
 src\ASF\sam0\drivers\nvm\nvm.c
+
+src\ASF\sam0\drivers\rtc\rtc_sam_l_c\rtc_count.c
+
+src\ASF\sam0\drivers\rtc\rtc_sam_l_c\rtc_count_interrupt.c
 
 src\ASF\sam0\drivers\sdadc\sdadc.c
 
 src\ASF\sam0\drivers\sdadc\sdadc_callback.c
+
+src\ASF\sam0\drivers\tsens\tsens.c
+
+src\ASF\sam0\drivers\tsens\tsens_callback.c
 
 src\can_utils.c
 

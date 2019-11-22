@@ -353,3 +353,56 @@ int can_utils_init(void)
     else
         return (0);
 }
+
+struct rtc_module rtc_mod;
+
+/* Use the 32K clock source as a counter.
+ * The counter increments every clock cycle and wraps around
+ * when it reaches 0xffffffff.
+ * Each increment is 30.5 microseconds.
+ * The primary use for this timer is to measure the duration of an
+ * operation.  
+ *
+ * microtimer_start() will clear the counter to 0.
+ * microtimer_read() will return the value of the timer.
+ * microtimer_convert(microtimer_read()) will return the value
+ * in microseconds.
+ */
+void
+microtimer_init(void)
+{
+    struct rtc_count_config config;
+    rtc_count_get_config_defaults(&config);
+    config.prescaler = RTC_COUNT_PRESCALER_OFF;
+    rtc_count_init(&rtc_mod, RTC, &config);
+}
+
+void
+microtimer_start(void)
+{
+    rtc_count_set_count(&rtc_mod, 0);
+    rtc_count_enable(&rtc_mod);
+}
+
+uint32_t
+microtimer_read(void)
+{
+    return(rtc_count_get_count(&rtc_mod));
+}
+
+uint32_t
+microtimer_stop(void)
+{
+    rtc_count_disable(&rtc_mod);
+    return(rtc_count_get_count(&rtc_mod));
+}
+
+/* Multiply incoming value by 30.5 to get microseconds */
+uint32_t
+microtimer_convert(uint32_t x)
+{
+    uint32_t val;
+    val = 30 * x;
+    val += (x >> 1);
+    return (val);
+}

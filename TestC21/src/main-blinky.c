@@ -78,6 +78,8 @@ void main_blinky( void )
     port_pin_set_output_level(RED_LED_PIN, false);
     port_pin_set_output_level(GREEN_LED_PIN, false);
 
+    microtimer_init();
+
     vTaskStartScheduler();
 
     /* If all is well, the scheduler will now be running, and the following
@@ -582,10 +584,18 @@ static
 void do_adctest(void)
 {
    int i;
+   uint32_t timer;
    configure_adc();
    configure_adc_callbacks();
+microtimer_start();
+for (i = 0; i < 100; i++) {
    adc_run();
    adc_wait();
+}
+
+timer = microtimer_stop();
+debug_msg("ADC microseconds =");
+printhex(microtimer_convert(timer), CRLF);
 
    /* When we get here, the result_buffer should contain
     * 128 16-bit samples

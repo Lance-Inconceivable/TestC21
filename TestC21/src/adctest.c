@@ -25,7 +25,11 @@ void configure_adc(void)
 
     config_adc.clock_prescaler = ADC_CLOCK_PRESCALER_DIV8;
     config_adc.reference = ADC_REFERENCE_INTVCC2;
+#if 1
     config_adc.positive_input = ADC_POSITIVE_INPUT_PIN8;
+#else
+    config_adc.positive_input = ADC_POSITIVE_INPUT_PIN0;
+#endif
     config_adc.resolution = ADC_RESOLUTION_12BIT;
     adc_init(&adc_instance, ADC0, &config_adc);
 }

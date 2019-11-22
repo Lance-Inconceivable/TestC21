@@ -63,6 +63,10 @@
 #include <compiler.h>
 #include <status_codes.h>
 
+// From module: FREQM - Frequency Meter (Callback APIs)
+#include <freqm.h>
+#include <freqm_callback.h>
+
 // From module: FreeRTOS - kernel 10.0.0
 #include <FreeRTOS.h>
 #include <croutine.h>
@@ -95,6 +99,11 @@
 // From module: Part identification macros
 #include <parts.h>
 
+// From module: RTC - Real Time Counter in Count Mode (Callback APIs)
+#include <rtc_count.h>
+#include <rtc_count_interrupt.h>
+#include <rtc_tamper.h>
+
 // From module: SDADC - Sigma-Delta Analog-to-Digital Converter (Callback APIs)
 #include <sdadc.h>
 #include <sdadc_callback.h>
@@ -125,6 +134,10 @@
 
 // From module: SYSTEM - Reset Management for SAM C20/C21
 #include <reset.h>
+
+// From module: TSENS - Temperature Sensor (Callback APIs)
+#include <tsens.h>
+#include <tsens_callback.h>
 
 // From module: USART - Serial interface- SAM implementation for devices with only USART
 #include <serial.h>
