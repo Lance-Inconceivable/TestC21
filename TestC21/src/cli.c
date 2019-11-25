@@ -59,6 +59,8 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Disable resistance on analog input 0-3\r\n"},
     {"adctest", "\tadctest\r\n",                    CMD_ADCTEST,
             "\t! Run ADC test - Voltage divider into AIN8\r\n"},
+    {"sdtest", "\tsdtest\r\n",                      CMD_SDTEST,
+            "\t! Run SDADC test\r\n"},
 };
 
 const
@@ -160,6 +162,7 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_NVM     || 
         cmd == CMD_EEP     || 
         cmd == CMD_ADCTEST || 
+        cmd == CMD_SDTEST  || 
         cmd == CMD_SEND)  
         return (cmd);
 

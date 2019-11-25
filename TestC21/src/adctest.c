@@ -2,11 +2,14 @@
 #include <asf.h>
 
 struct adc_module adc_instance;
+struct sdadc_module sdadc_instance;
 
 #define ADC_SAMPLES 128
 uint16_t adc_result_buffer[ADC_SAMPLES];
+uint32_t sdadc_result_buffer[ADC_SAMPLES];
 
 volatile bool adc_read_done = false;
+volatile bool sdadc_read_done = false;
 
 /* After 128 samples have been taken, the ISR will set this flag to 'true'.
  * We can poll on this flag for now.  The right way to do it is to give a
@@ -15,6 +18,12 @@ volatile bool adc_read_done = false;
 void adc_complete_callback(struct adc_module *module)
 {
     adc_read_done = true;
+    return;
+}
+
+void sdadc_complete_callback(struct sdadc_module *module)
+{
+    sdadc_read_done = true;
     return;
 }
 
@@ -53,6 +62,38 @@ void adc_wait(void)
        {}
 }
 
+/*******************  SDADC ************************************************/
 
 
+
+void configure_sdadc(void)
+{
+    struct sdadc_config config;
+    sdadc_get_config_defaults(&config);
+    config.mux_input = SDADC_MUX_INPUT_AIN0;
+    config.reference.ref_sel = SDADC_REFERENCE_INTVCC;    /* 5V VDDANA */
+    config.reference.ref_range = SDADC_REFRANGE_3;
+    config.skip_count = 3;
+    config.correction.shift_correction = 8;
    
+    sdadc_init(&sdadc_instance, SDADC, &config);
+}
+
+void configure_sdadc_callbacks(void)
+{
+    sdadc_register_callback(&sdadc_instance, sdadc_complete_callback, 
+        SDADC_CALLBACK_READ_BUFFER);
+    sdadc_enable_callback(&sdadc_instance, SDADC_CALLBACK_READ_BUFFER);
+}
+
+void sdadc_run(void)
+{
+    sdadc_enable(&sdadc_instance);
+    sdadc_read_buffer_job(&sdadc_instance, sdadc_result_buffer, 2);
+}
+
+void sdadc_wait(void)
+{
+   while (sdadc_read_done == false)
+       {}
+}

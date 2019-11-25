@@ -33,6 +33,7 @@
 #include <string.h>
 #include "UARTCommandConsole.h"
 #include "can_utils.h"
+#include "adctest.h"
 
 /*-----------------------------------------------------------*/
 
@@ -574,12 +575,6 @@ do_xgen(int ain)
     do_shift(arg);
 }
 
-extern uint16_t adc_result_buffer[];
-extern void configure_adc(void);
-extern void configure_adc_callbacks(void);
-extern void adc_run(void);
-extern void adc_wait(void);
-
 static
 void do_adctest(void)
 {
@@ -604,6 +599,36 @@ printhex(microtimer_convert(timer), CRLF);
    debug_msg("ADC results\r\n");
    for (i = 0; i < 10; i++)
        printhex(adc_result_buffer[i], CRLF);
+}
+
+static
+void do_sdtest(void)
+{
+   int i;
+   uint32_t timer;
+   configure_sdadc();
+   configure_sdadc_callbacks();
+microtimer_start();
+#if 0
+for (i = 0; i < 100; i++) {
+#endif
+   sdadc_run();
+   sdadc_wait();
+#if 0
+}
+#endif
+
+timer = microtimer_stop();
+debug_msg("ADC microseconds =");
+printhex(microtimer_convert(timer), CRLF);
+
+   /* When we get here, the result_buffer should contain
+    * 128 16-bit samples
+    * Print a few of them.
+    */
+   debug_msg("SDADC results\r\n");
+   for (i = 0; i < 10; i++)
+       printhex(sdadc_result_buffer[i], CRLF);
 }
 
 int do_baud(int baud)
@@ -692,6 +717,9 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_ADCTEST:
             do_adctest();
+            break;
+        case CMD_SDTEST:
+            do_sdtest();
             break;
         default:
             rval = -1;
