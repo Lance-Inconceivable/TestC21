@@ -619,8 +619,15 @@ for (i = 0; i < 100; i++) {
 #endif
 
 timer = microtimer_stop();
-debug_msg("ADC microseconds =");
+debug_msg("ADC microseconds (hex) =");
 printhex(microtimer_convert(timer), CRLF);
+#if 0
+microtimer_start();
+vTaskDelay(100);
+timer = microtimer_stop();
+debug_msg("check timer 100 ticks in microseconds = ");
+printhex(microtimer_convert(timer), CRLF);
+#endif
 
    /* When we get here, the result_buffer should contain
     * 128 16-bit samples
