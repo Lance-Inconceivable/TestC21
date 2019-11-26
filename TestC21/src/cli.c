@@ -61,6 +61,8 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Run ADC test - Voltage divider into AIN8\r\n"},
     {"sdtest", "\tsdtest\r\n",                      CMD_SDTEST,
             "\t! Run SDADC test\r\n"},
+    {"freqm", "\tfreqm\r\n",                        CMD_FREQM,
+            "\t! Run frequency monitor test\r\n"},
 };
 
 const
@@ -163,6 +165,7 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_EEP     || 
         cmd == CMD_ADCTEST || 
         cmd == CMD_SDTEST  || 
+        cmd == CMD_FREQM   || 
         cmd == CMD_SEND)  
         return (cmd);
 

@@ -638,6 +638,26 @@ printhex(microtimer_convert(timer), CRLF);
        printhex(sdadc_result_buffer[i], CRLF);
 }
 
+static
+void do_freqm(void)
+{
+   int rval;
+   uint32_t result;
+   configure_freqm();
+   configure_freqm_callbacks();
+   freqm_run();
+   rval = freqm_wait(&result);
+
+   if (rval) {
+       debug_msg("Error status in FREQM = ");
+       printhex(rval, CRLF);
+   }
+   else {
+       debug_msg("freqm result = ");
+       printhex(result, CRLF);
+   }
+}
+
 int do_baud(int baud)
 {
     if (baud != 250 && baud != 500 && baud != 1000) {
@@ -727,6 +747,9 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_SDTEST:
             do_sdtest();
+            break;
+        case CMD_FREQM:
+            do_freqm();
             break;
         default:
             rval = -1;
