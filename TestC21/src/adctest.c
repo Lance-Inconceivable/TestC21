@@ -86,6 +86,7 @@ void configure_sdadc(void)
     config.reference.ref_sel = SDADC_REFERENCE_INTVCC;    /* 5V VDDANA */
     config.reference.ref_range = SDADC_REFRANGE_3;
     config.skip_count = 3;
+    config.clock_prescaler = 8;
     config.correction.shift_correction = 8;
    
     sdadc_init(&sdadc_instance, SDADC, &config);
@@ -123,8 +124,10 @@ void configure_freqm(void)
      * The measurement duration is config.ref_clock_circles: 127.
      * GCLK1 is 6 MHz.
      */
-    freq_window = config.ref_clock_circles;
-    freq_ref = 6*1024*1024;
+#define EXTERNAL_CLOCK_TESTx
+#ifdef EXTERNAL_CLOCK_TEST
+    config.msr_clock_source = GCLK_GENERATOR_4;
+#endif
    
     freqm_init(&freqm_instance, FREQM, &config);
 }
