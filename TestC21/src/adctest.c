@@ -124,7 +124,7 @@ void configure_freqm(void)
      * The measurement duration is config.ref_clock_circles: 127.
      * GCLK1 is 6 MHz.
      */
-#define EXTERNAL_CLOCK_TESTx
+#define EXTERNAL_CLOCK_TEST
 #ifdef EXTERNAL_CLOCK_TEST
     config.msr_clock_source = GCLK_GENERATOR_4;
 #endif

@@ -78,7 +78,7 @@
 
 
 /* SYSTEM_CLOCK_SOURCE_OSC32K configuration - Internal 32KHz oscillator */
-#  define CONF_CLOCK_OSC32K_ENABLE                false
+#  define CONF_CLOCK_OSC32K_ENABLE                true      /* Jimmy, try for freq mon test! */
 #  define CONF_CLOCK_OSC32K_STARTUP_TIME          SYSTEM_OSC32K_STARTUP_130
 #  define CONF_CLOCK_OSC32K_ENABLE_1KHZ_OUTPUT    true
 #  define CONF_CLOCK_OSC32K_ENABLE_32KHZ_OUTPUT   true
@@ -120,6 +120,8 @@
 #  define CONF_CLOCK_GCLK_0_PRESCALER             1
 #  define CONF_CLOCK_GCLK_0_OUTPUT_ENABLE         false
 
+#define EXTERNAL_CLOCK_TEST
+#ifdef INTERNAL_CLOCK_TEST
 /* Jimmy test:  Use this as a reference clock for FREQM */
 /* Configure GCLK generator 1 */
 #  define CONF_CLOCK_GCLK_1_ENABLE                true
@@ -127,6 +129,22 @@
 #  define CONF_CLOCK_GCLK_1_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC48M
 #  define CONF_CLOCK_GCLK_1_PRESCALER             8
 #  define CONF_CLOCK_GCLK_1_OUTPUT_ENABLE         false
+#endif
+#ifdef EXTERNAL_CLOCK_TEST
+/* Configure GCLK generator 1 */
+#  define CONF_CLOCK_GCLK_1_ENABLE                true
+#  define CONF_CLOCK_GCLK_1_RUN_IN_STANDBY        false
+#  define CONF_CLOCK_GCLK_1_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC32K
+#  define CONF_CLOCK_GCLK_1_PRESCALER             16       /* 2048 Hz reference */
+#  define CONF_CLOCK_GCLK_1_OUTPUT_ENABLE         false
+#else
+/* Configure GCLK generator 1 */
+#  define CONF_CLOCK_GCLK_1_ENABLE                false
+#  define CONF_CLOCK_GCLK_1_RUN_IN_STANDBY        false
+#  define CONF_CLOCK_GCLK_1_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC48M
+#  define CONF_CLOCK_GCLK_1_PRESCALER             1
+#  define CONF_CLOCK_GCLK_1_OUTPUT_ENABLE         false
+#endif
 
 /* Configure GCLK generator 2  */
 #  define CONF_CLOCK_GCLK_2_ENABLE                false
@@ -142,12 +160,21 @@
 #  define CONF_CLOCK_GCLK_3_PRESCALER             1
 #  define CONF_CLOCK_GCLK_3_OUTPUT_ENABLE         false
 
+#ifdef EXTERNAL_CLOCK_TEST         /* Clock to be measured */
+/* Configure GCLK generator 4 */
+#  define CONF_CLOCK_GCLK_4_ENABLE                true
+#  define CONF_CLOCK_GCLK_4_RUN_IN_STANDBY        false
+#  define CONF_CLOCK_GCLK_4_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_GCLKIN
+#  define CONF_CLOCK_GCLK_4_PRESCALER             1
+#  define CONF_CLOCK_GCLK_4_OUTPUT_ENABLE         false
+#else
 /* Configure GCLK generator 4 */
 #  define CONF_CLOCK_GCLK_4_ENABLE                false
 #  define CONF_CLOCK_GCLK_4_RUN_IN_STANDBY        false
 #  define CONF_CLOCK_GCLK_4_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC48M
 #  define CONF_CLOCK_GCLK_4_PRESCALER             1
 #  define CONF_CLOCK_GCLK_4_OUTPUT_ENABLE         false
+#endif
 
 /* Configure GCLK generator 5 */
 #  define CONF_CLOCK_GCLK_5_ENABLE                false

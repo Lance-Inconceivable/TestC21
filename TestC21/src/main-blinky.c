@@ -73,6 +73,11 @@ struct can_module *pCAN = &can_instance;
 
 void main_blinky( void )
 {
+    struct system_pinmux_config pin_config;
+    /* Set up I/O pins */
+    system_pinmux_get_config_defaults(&pin_config);
+    pin_config.mux_position = MUX_PA10H_GCLK_IO4;
+    system_pinmux_pin_set_config(PIN_PA10H_GCLK_IO4, &pin_config);
     vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
     /* Initialize "stdio" */
     debug_msg_init();
