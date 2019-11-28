@@ -63,6 +63,10 @@
 #include <compiler.h>
 #include <status_codes.h>
 
+// From module: EXTINT - External Interrupt (Callback APIs)
+#include <extint.h>
+#include <extint_callback.h>
+
 // From module: FREQM - Frequency Meter (Callback APIs)
 #include <freqm.h>
 #include <freqm_callback.h>
@@ -83,6 +87,9 @@
 #include <stream_buffer.h>
 #include <task.h>
 #include <timers.h>
+
+/* This is a Jimmy test macro */
+#define EXTERNAL_CLOCK_TEST
 
 // From module: Generic board support
 #include <board.h>
@@ -134,6 +141,10 @@
 
 // From module: SYSTEM - Reset Management for SAM C20/C21
 #include <reset.h>
+
+// From module: TC - Timer Counter (Callback APIs)
+#include <tc.h>
+#include <tc_interrupt.h>
 
 // From module: TSENS - Temperature Sensor (Callback APIs)
 #include <tsens.h>

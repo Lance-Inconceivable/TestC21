@@ -75,9 +75,15 @@ void main_blinky( void )
 {
     struct system_pinmux_config pin_config;
     /* Set up I/O pins */
+#ifdef EXTERNAL_CLOCK_TEST
+    /* Use this pin as the input source for testing the 
+     * Atmel FREQM module.  Normally this pin is used for ADC
+     * input (marked SIG_GEN2 on the sensordev board.
+     */
     system_pinmux_get_config_defaults(&pin_config);
     pin_config.mux_position = MUX_PA10H_GCLK_IO4;
     system_pinmux_pin_set_config(PIN_PA10H_GCLK_IO4, &pin_config);
+#endif
     vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
     /* Initialize "stdio" */
     debug_msg_init();
