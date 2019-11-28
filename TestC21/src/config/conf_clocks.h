@@ -120,7 +120,6 @@
 #  define CONF_CLOCK_GCLK_0_PRESCALER             1
 #  define CONF_CLOCK_GCLK_0_OUTPUT_ENABLE         false
 
-#define EXTERNAL_CLOCK_TEST
 #ifdef INTERNAL_CLOCK_TEST
 /* Jimmy test:  Use this as a reference clock for FREQM */
 /* Configure GCLK generator 1 */
