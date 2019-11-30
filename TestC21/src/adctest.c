@@ -3,18 +3,13 @@
 
 struct adc_module adc_instance;
 struct sdadc_module sdadc_instance;
-struct sdadc_module freqm_instance;
 
 #define ADC_SAMPLES 128
 uint16_t adc_result_buffer[ADC_SAMPLES];
 uint32_t sdadc_result_buffer[ADC_SAMPLES];
 
-uint32_t freq_window;
-uint32_t freq_ref;
-
 volatile bool adc_read_done = false;
 volatile bool sdadc_read_done = false;
-volatile bool freqm_read_done = false;
 
 /* After 128 samples have been taken, the ISR will set this flag to 'true'.
  * We can poll on this flag for now.  The right way to do it is to give a
@@ -29,12 +24,6 @@ void adc_complete_callback(struct adc_module *module)
 void sdadc_complete_callback(struct sdadc_module *module)
 {
     sdadc_read_done = true;
-    return;
-}
-
-void freqm_complete_callback(struct freqm_module *module)
-{
-    freqm_read_done = true;
     return;
 }
 
@@ -110,46 +99,4 @@ void sdadc_wait(void)
    while (sdadc_read_done == false)
        {}
    sdadc_read_done = false;
-}
-
-/************************    FREQM **********************/
-
-void configure_freqm(void)
-{
-    struct freqm_config config;
-    freqm_get_config_defaults(&config);
-    config.ref_clock_circles = 48;
-    /* Using all the defaults for this case means that we will measure
-     * GCLK0 using GCLK1 as a reference.
-     * The measurement duration is config.ref_clock_circles: 127.
-     * GCLK1 is 6 MHz.
-     */
-#ifdef EXTERNAL_CLOCK_TEST
-    /* The input pin at SIG_GEN2 will be used as GCLK_IO4 */
-    config.msr_clock_source = GCLK_GENERATOR_4;
-#endif
-   
-    freqm_init(&freqm_instance, FREQM, &config);
-}
-
-void configure_freqm_callbacks(void)
-{
-    freqm_register_callback(&freqm_instance, freqm_complete_callback, 
-        FREQM_CALLBACK_MEASURE_DONE);
-    freqm_enable_callback(&freqm_instance, FREQM_CALLBACK_MEASURE_DONE);
-}
-
-void freqm_run(void)
-{
-    freqm_enable(&freqm_instance);
-    freqm_start_measure(&freqm_instance);
-}
-
-int freqm_wait(uint32_t *result)
-{
-   int rval;
-   while (freqm_read_done == false)
-       {}
-   freqm_read_done = false;
-   return (freqm_get_result_value(&freqm_instance, result));
 }

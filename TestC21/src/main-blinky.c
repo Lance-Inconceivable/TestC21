@@ -34,6 +34,7 @@
 #include "UARTCommandConsole.h"
 #include "can_utils.h"
 #include "adctest.h"
+#include "frequency.h"
 
 /*-----------------------------------------------------------*/
 
@@ -84,6 +85,16 @@ void main_blinky( void )
     pin_config.mux_position = MUX_PA10H_GCLK_IO4;
     system_pinmux_pin_set_config(PIN_PA10H_GCLK_IO4, &pin_config);
 #endif
+
+#if 0
+    /* Configure frequency input pin.  By default pin is a GPIO input.
+     * Just turn off the pull-up.
+     */
+    system_pinmux_get_config_defaults(&pin_config);
+    pin_config.input_pull = SYSTEM_PINMUX_PIN_PULL_NONE;
+    system_pinmux_pin_set_config(PORT_PA18, &pin_config);
+#endif
+
     vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
     /* Initialize "stdio" */
     debug_msg_init();
@@ -696,6 +707,7 @@ void do_start_reader(void)
     );	
 }
 
+extern void freq_gpio_init(int pin);
 int dispatch_cmd(char *cmd)
 {
     int rval;
@@ -761,6 +773,13 @@ int dispatch_cmd(char *cmd)
             break;
         case CMD_FREQM:
             do_freqm();
+            break;
+        case CMD_FREQCOUNT:   
+            freq_gpio_init(PIN_PA18);  /* Hack to test TC */
+            break;
+        case CMD_FREQSHOW:   
+            debug_msg("Frequency (hex) = ");
+            printhex(gFreq, CRLF);
             break;
         default:
             rval = -1;

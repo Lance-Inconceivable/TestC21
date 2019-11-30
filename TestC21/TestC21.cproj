@@ -35,15 +35,17 @@
           <option id="common.services.basic.serial" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.adc" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.can" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.freqm" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.nvm" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.rtc" value="Add" config="count_callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.sdadc" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.sercom.usart" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.system" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="thirdparty.os.freertos.version" value="Add" config="10.0.0" content-id="Atmel.ASF" />
           <option id="sam0.drivers.tsens" value="Add" config="callback" content-id="Atmel.ASF" />
-          <option id="sam0.drivers.freqm" value="Add" config="callback" content-id="Atmel.ASF" />
-          <option id="sam0.drivers.rtc" value="Add" config="count_callback" content-id="Atmel.ASF" />
+          <option id="thirdparty.os.freertos.version" value="Add" config="10.0.0" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.extint" value="Add" config="callback" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.tc" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="common.applications.user_application.xplained_pro2" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.utils" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.utils.cmsis.samc21.source.template" value="Add" config="" content-id="Atmel.ASF" />
@@ -286,6 +288,15 @@
           <file path="src/ASF/sam0/drivers/tsens/tsens_callback.c" framework="" version="3.47.0" source="sam0\drivers\tsens\tsens_callback.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/tsens/tsens.h" framework="" version="3.47.0" source="sam0\drivers\tsens\tsens.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/tsens/tsens_callback.h" framework="" version="3.47.0" source="sam0\drivers\tsens\tsens_callback.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/extint/extint_callback.c" framework="" version="3.47.0" source="sam0\drivers\extint\extint_callback.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/extint/extint_callback.h" framework="" version="3.47.0" source="sam0\drivers\extint\extint_callback.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/extint/extint.h" framework="" version="3.47.0" source="sam0\drivers\extint\extint.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/Config/conf_extint.h" framework="" version="3.47.0" source="sam0\drivers\extint\module_config\conf_extint.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/extint/extint_sam_l_c/extint.c" framework="" version="3.47.0" source="sam0\drivers\extint\extint_sam_l_c\extint.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/tc/tc_interrupt.c" framework="" version="3.47.0" source="sam0\drivers\tc\tc_interrupt.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/tc/tc_interrupt.h" framework="" version="3.47.0" source="sam0\drivers\tc\tc_interrupt.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/tc/tc.h" framework="" version="3.47.0" source="sam0\drivers\tc\tc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/tc/tc_sam_l_c/tc.c" framework="" version="3.47.0" source="sam0\drivers\tc\tc_sam_l_c\tc.c" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/3.47.0/common.applications.user_application.xplained_pro2.samc21_xplained_pro/html/index.html" />
         <offline-documentation help="" />
@@ -345,6 +356,8 @@
       <Value>FREQM_CALLBACK_MODE=true</Value>
       <Value>RTC_COUNT_ASYNC=true</Value>
       <Value>TSENS_CALLBACK_MODE=true</Value>
+      <Value>EXTINT_CALLBACK_MODE=true</Value>
+      <Value>TC_ASYNC=true</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -387,6 +400,10 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
@@ -448,9 +465,13 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMC21_XPLAINED_PRO -D__SAMC21J18A__ -D__FREERTOS__ -DUSART_CALLBACK_MODE=true -DADC_CALLBACK_MODE=true -DSDADC_CALLBACK_MODE=true -DFREQM_CALLBACK_MODE=true -DRTC_COUNT_ASYNC=true -DTSENS_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMC21_XPLAINED_PRO -D__SAMC21J18A__ -D__FREERTOS__ -DUSART_CALLBACK_MODE=true -DADC_CALLBACK_MODE=true -DSDADC_CALLBACK_MODE=true -DFREQM_CALLBACK_MODE=true -DRTC_COUNT_ASYNC=true -DTSENS_CALLBACK_MODE=true -DEXTINT_CALLBACK_MODE=true -DTC_ASYNC=true</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -491,6 +512,10 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
 </ArmGcc>
@@ -517,6 +542,8 @@
       <Value>FREQM_CALLBACK_MODE=true</Value>
       <Value>RTC_COUNT_ASYNC=true</Value>
       <Value>TSENS_CALLBACK_MODE=true</Value>
+      <Value>EXTINT_CALLBACK_MODE=true</Value>
+      <Value>TC_ASYNC=true</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -559,6 +586,10 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
@@ -621,10 +652,14 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMC21_XPLAINED_PRO -D__SAMC21J18A__ -D__FREERTOS__ -DUSART_CALLBACK_MODE=true -DADC_CALLBACK_MODE=true -DSDADC_CALLBACK_MODE=true -DFREQM_CALLBACK_MODE=true -DRTC_COUNT_ASYNC=true -DTSENS_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMC21_XPLAINED_PRO -D__SAMC21J18A__ -D__FREERTOS__ -DUSART_CALLBACK_MODE=true -DADC_CALLBACK_MODE=true -DSDADC_CALLBACK_MODE=true -DFREQM_CALLBACK_MODE=true -DRTC_COUNT_ASYNC=true -DTSENS_CALLBACK_MODE=true -DEXTINT_CALLBACK_MODE=true -DTC_ASYNC=true</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -665,6 +700,10 @@
       <Value>../src/ASF/sam0/drivers/rtc</Value>
       <Value>../src/ASF/sam0/drivers/rtc/rtc_sam_l_c</Value>
       <Value>../src/ASF/sam0/drivers/tsens</Value>
+      <Value>../src/ASF/sam0/drivers/extint</Value>
+      <Value>../src/ASF/sam0/drivers/extint/extint_sam_l_c</Value>
+      <Value>../src/ASF/sam0/drivers/tc</Value>
+      <Value>../src/ASF/sam0/drivers/tc/tc_sam_l_c</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
@@ -690,6 +729,8 @@
     <Folder Include="src\ASF\sam0\drivers\can\" />
     <Folder Include="src\ASF\sam0\drivers\can\quick_start\" />
     <Folder Include="src\ASF\sam0\drivers\can\quick_start_fd\" />
+    <Folder Include="src\ASF\sam0\drivers\extint\" />
+    <Folder Include="src\ASF\sam0\drivers\extint\extint_sam_l_c\" />
     <Folder Include="src\ASF\sam0\drivers\freqm\" />
     <Folder Include="src\ASF\sam0\drivers\nvm\" />
     <Folder Include="src\ASF\sam0\drivers\nvm\quick_start_basic\" />
@@ -717,6 +758,8 @@
     <Folder Include="src\ASF\sam0\drivers\system\power\power_sam_c\" />
     <Folder Include="src\ASF\sam0\drivers\system\reset\" />
     <Folder Include="src\ASF\sam0\drivers\system\reset\reset_sam_c\" />
+    <Folder Include="src\ASF\sam0\drivers\tc\" />
+    <Folder Include="src\ASF\sam0\drivers\tc\tc_sam_l_c\" />
     <Folder Include="src\ASF\sam0\drivers\tsens\" />
     <Folder Include="src\ASF\sam0\utils\" />
     <Folder Include="src\ASF\sam0\utils\cmsis\" />
@@ -793,6 +836,18 @@
     <None Include="src\config\conf_can.h">
       <SubType>compile</SubType>
     </None>
+    <None Include="src\ASF\sam0\drivers\extint\extint.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\sam0\drivers\extint\extint_callback.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\sam0\drivers\extint\extint_callback.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\sam0\drivers\extint\extint_sam_l_c\extint.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\sam0\drivers\freqm\freqm.c">
       <SubType>compile</SubType>
     </Compile>
@@ -847,6 +902,18 @@
     <None Include="src\ASF\sam0\drivers\sdadc\sdadc_callback.h">
       <SubType>compile</SubType>
     </None>
+    <None Include="src\ASF\sam0\drivers\tc\tc.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\sam0\drivers\tc\tc_interrupt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\sam0\drivers\tc\tc_interrupt.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\sam0\drivers\tc\tc_sam_l_c\tc.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\sam0\drivers\tsens\tsens.c">
       <SubType>compile</SubType>
     </Compile>
@@ -874,6 +941,15 @@
     <None Include="src\config\conf_rtc.h">
       <SubType>compile</SubType>
     </None>
+    <None Include="src\config\conf_extint.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\frequency.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\frequency.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\UARTCommandConsole.c">
       <SubType>compile</SubType>
     </Compile>

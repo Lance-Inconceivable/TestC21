@@ -145,11 +145,14 @@
 #  define CONF_CLOCK_GCLK_1_OUTPUT_ENABLE         false
 #endif
 
+/* Lets use this to get a 1 MHz clock for TC
+ * Divide by 24 here.  TC will divide by 2
+ */
 /* Configure GCLK generator 2  */
-#  define CONF_CLOCK_GCLK_2_ENABLE                false
+#  define CONF_CLOCK_GCLK_2_ENABLE                true
 #  define CONF_CLOCK_GCLK_2_RUN_IN_STANDBY        false
 #  define CONF_CLOCK_GCLK_2_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC48M
-#  define CONF_CLOCK_GCLK_2_PRESCALER             1
+#  define CONF_CLOCK_GCLK_2_PRESCALER             24
 #  define CONF_CLOCK_GCLK_2_OUTPUT_ENABLE         false
 
 /* Configure GCLK generator 3 */

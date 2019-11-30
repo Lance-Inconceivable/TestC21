@@ -12,6 +12,10 @@ src\ASF\sam0\drivers\adc\adc_sam_l_c\adc_callback.c
 
 src\ASF\sam0\drivers\can\can.c
 
+src\ASF\sam0\drivers\extint\extint_callback.c
+
+src\ASF\sam0\drivers\extint\extint_sam_l_c\extint.c
+
 src\ASF\sam0\drivers\freqm\freqm.c
 
 src\ASF\sam0\drivers\freqm\freqm_callback.c
@@ -26,6 +30,10 @@ src\ASF\sam0\drivers\sdadc\sdadc.c
 
 src\ASF\sam0\drivers\sdadc\sdadc_callback.c
 
+src\ASF\sam0\drivers\tc\tc_interrupt.c
+
+src\ASF\sam0\drivers\tc\tc_sam_l_c\tc.c
+
 src\ASF\sam0\drivers\tsens\tsens.c
 
 src\ASF\sam0\drivers\tsens\tsens_callback.c
@@ -33,6 +41,8 @@ src\ASF\sam0\drivers\tsens\tsens_callback.c
 src\can_utils.c
 
 src\cli.c
+
+src\frequency.c
 
 src\UARTCommandConsole.c
 

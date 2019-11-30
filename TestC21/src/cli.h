@@ -25,8 +25,10 @@
 #define CMD_ADCTEST 17
 #define CMD_SDTEST 18
 #define CMD_FREQM 19
+#define CMD_FREQCOUNT 20
+#define CMD_FREQSHOW 21
 
-#define NUM_COMMANDS 19
+#define NUM_COMMANDS 21
 
 int16_t get_command(char *buf, uint32_t *param, uint32_t *param2);
 const char *get_help(uint8_t cmd);

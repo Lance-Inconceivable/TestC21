@@ -63,6 +63,10 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Run SDADC test\r\n"},
     {"freqm", "\tfreqm\r\n",                        CMD_FREQM,
             "\t! Run frequency monitor test\r\n"},
+    {"freqcount", "\tfreqcount\r\n",                CMD_FREQCOUNT,
+            "\t! Count frequency at GPIO pin\r\n"},
+    {"freqshow", "\tfreqshow\r\n",                  CMD_FREQSHOW,
+            "\t! Print value of frequency counter\r\n"},
 };
 
 const
@@ -166,6 +170,8 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_ADCTEST || 
         cmd == CMD_SDTEST  || 
         cmd == CMD_FREQM   || 
+        cmd == CMD_FREQCOUNT || 
+        cmd == CMD_FREQSHOW || 
         cmd == CMD_SEND)  
         return (cmd);
 
