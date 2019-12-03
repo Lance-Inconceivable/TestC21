@@ -63,6 +63,12 @@
 #include <compiler.h>
 #include <status_codes.h>
 
+// From module: EVSYS - Event System Common
+#include <events.h>
+
+// From module: EVSYS - Event System with interupt hooks support
+#include <events_hooks.h>
+
 // From module: EXTINT - External Interrupt (Callback APIs)
 #include <extint.h>
 #include <extint_callback.h>
@@ -87,9 +93,6 @@
 #include <stream_buffer.h>
 #include <task.h>
 #include <timers.h>
-
-/* This is a Jimmy test macro */
-#define EXTERNAL_CLOCK_TEST
 
 // From module: Generic board support
 #include <board.h>

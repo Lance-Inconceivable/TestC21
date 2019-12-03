@@ -708,6 +708,7 @@ void do_start_reader(void)
 }
 
 extern void freq_gpio_init(int pin);
+extern void printtc(void);
 int dispatch_cmd(char *cmd)
 {
     int rval;
@@ -778,8 +779,12 @@ int dispatch_cmd(char *cmd)
             freq_gpio_init(PIN_PA18);  /* Hack to test TC */
             break;
         case CMD_FREQSHOW:   
+#if 0
             debug_msg("Frequency (hex) = ");
             printhex(gFreq, CRLF);
+#else
+            printtc();
+#endif
             break;
         default:
             rval = -1;

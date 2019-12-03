@@ -12,6 +12,10 @@ src\ASF\sam0\drivers\adc\adc_sam_l_c\adc_callback.c
 
 src\ASF\sam0\drivers\can\can.c
 
+src\ASF\sam0\drivers\events\events_hooks.c
+
+src\ASF\sam0\drivers\events\events_sam_l_c\events.c
+
 src\ASF\sam0\drivers\extint\extint_callback.c
 
 src\ASF\sam0\drivers\extint\extint_sam_l_c\extint.c
