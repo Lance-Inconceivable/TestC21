@@ -707,8 +707,6 @@ void do_start_reader(void)
     );	
 }
 
-extern void freq_gpio_init(int pin);
-extern void printtc(void);
 int dispatch_cmd(char *cmd)
 {
     int rval;
