@@ -45,9 +45,11 @@ void configure_freqm(void)
     freqm_init(&freqm_instance, FREQM, &config);
     configure_freqm_callbacks();
 
-    freqSem = xSemaphoreCreateBinary();
-    if (freqSem == NULL)
-       debug_msg("Semaphore not created!\r\n");
+    if (freqSem == NULL) {
+        freqSem = xSemaphoreCreateBinary();
+        if (freqSem == NULL) 
+            debug_msg("Semaphore not created!\r\n");
+    }
 }
 
 void configure_freqm_callbacks(void)
@@ -84,13 +86,16 @@ volatile uint32_t my_func_counter = 0;
 
 static void my_func(struct tc_module *instance)
 {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     /* Take a snapshot of the timer's capture registers */
     cc0 = instance->hw->COUNT16.CC[0].reg;
     cc1 = instance->hw->COUNT16.CC[1].reg;
-my_func_counter++;
-#if 0
-    tc_disable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL1);
-#endif
+    my_func_counter++;
+    if (my_func_counter == 3) {
+        xSemaphoreGiveFromISR(freqSem, &xHigherPriorityTaskWoken);
+        if (xHigherPriorityTaskWoken)
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 struct events_resource resource;
@@ -135,6 +140,13 @@ void freq_gpio_init(int pin)
 #if 0  /* Jimmy test... don't enable callback until ready to read */
     tc_enable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL0);
 #endif
+
+    /* Semaphore to be used by callback */
+    if (freqSem == NULL) {
+        freqSem = xSemaphoreCreateBinary();
+        if (freqSem == NULL) 
+            debug_msg("Semaphore not created!\r\n");
+    }
 
     /* Note: enable the timer but don't start it.  That occurs when the
      * timer module captures an event because we're using the PWP
@@ -199,6 +211,7 @@ void printtc(void)
 {
     uint32_t my_cc0;
     uint32_t my_cc1;
+    int rval;
     volatile uint32_t temp;
 
     /* Clear any pending interrupts and grab the interrupt counter */
@@ -206,13 +219,14 @@ void printtc(void)
     my_cc0 = cc0;
     my_cc1 = cc1;
     temp = my_func_counter;
+    my_func_counter = 0;
     tc_enable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL1);
     system_interrupt_leave_critical_section();
 
     /* Spin for 3 interrupt cycles.  Replace this with semaphore and
      * have ISR give sem when counter value is temp + 3.
      */
-    while (my_func_counter < temp + 3){} 
+    rval = xSemaphoreTake(freqSem, 10);
 
     /* Get the data and disable the interrupt */
     system_interrupt_enter_critical_section();
@@ -221,12 +235,14 @@ void printtc(void)
     temp = my_func_counter;
     tc_disable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL1);
     system_interrupt_leave_critical_section();
+    if (rval == pdFALSE) {
+        debug_msg("frequency measurement timed out\r\n");
+        return;
+    }
 
     /* Print results */
     debug_msg("freq0 = ");
     printhex(1000000 / my_cc0, CRLF);
     debug_msg("freq1 = ");
     printhex(1000000 / my_cc1, CRLF);
-    debug_msg("interrupts = ");
-    printhex(my_func_counter, CRLF);
 }
