@@ -660,19 +660,27 @@ printhex(microtimer_convert(timer), CRLF);
        printhex(sdadc_result_buffer[i], CRLF);
 }
 
+static bool freqm_configured = false;
 static
 void do_freqm(void)
 {
    int rval;
    uint32_t result;
-   configure_freqm();
-   configure_freqm_callbacks();
+   if (freqm_configured == false) {
+       configure_freqm();
+       freqm_configured = true;
+   }
    freqm_run();
    rval = freqm_wait(&result);
 
    if (rval) {
-       debug_msg("Error status in FREQM = ");
-       printhex(rval, CRLF);
+       if (rval == -1) {
+           debug_msg("Measurement timed out\r\n");
+       }
+       else {
+           debug_msg("Error status in FREQM = ");
+           printhex(rval, CRLF);
+       }
    }
    else {
        debug_msg("freqm result = ");

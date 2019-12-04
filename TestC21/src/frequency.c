@@ -6,12 +6,15 @@
 
 struct freqm_module freqm_instance;
 
-volatile bool freqm_read_done = false;
+static SemaphoreHandle_t freqSem = NULL;
 
 static
 void freqm_complete_callback(void)
 {
-    freqm_read_done = true;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(freqSem, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken)
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     return;
 }
 
@@ -36,7 +39,15 @@ void configure_freqm(void)
     config.msr_clock_source = GCLK_GENERATOR_4;
 #endif
    
+    /* N.B.: If there's no signal on the input line, this call will hang
+     * trying to synchronize the input clock channel.
+     */
     freqm_init(&freqm_instance, FREQM, &config);
+    configure_freqm_callbacks();
+
+    freqSem = xSemaphoreCreateBinary();
+    if (freqSem == NULL)
+       debug_msg("Semaphore not created!\r\n");
 }
 
 void configure_freqm_callbacks(void)
@@ -54,11 +65,10 @@ void freqm_run(void)
 
 int freqm_wait(uint32_t *result)
 {
-   while (freqm_read_done == false)
-       {}
+   int rval = xSemaphoreTake(freqSem, 10);
 
-   /* clear the ready flag */
-   freqm_read_done = false;
+   if (rval == pdFALSE)
+      return (-1);
 
    return (freqm_get_result_value(&freqm_instance, result));
 }
