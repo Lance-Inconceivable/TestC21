@@ -1,12 +1,14 @@
 
 #include <asf.h>
 #include <string.h>
+#include <frequency.h>
 #include <UARTCommandConsole.h>
 
 struct freqm_module freqm_instance;
 
 volatile bool freqm_read_done = false;
 
+static
 void freqm_complete_callback(void)
 {
     freqm_read_done = true;
@@ -52,7 +54,6 @@ void freqm_run(void)
 
 int freqm_wait(uint32_t *result)
 {
-   int rval;
    while (freqm_read_done == false)
        {}
 
@@ -85,7 +86,7 @@ my_func_counter++;
 struct events_resource resource;
 void evsys_configuration(void);
 
-freq_gpio_init(int pin)
+void freq_gpio_init(int pin)
 {
     struct extint_chan_conf config;
     struct tc_config tc_config;
