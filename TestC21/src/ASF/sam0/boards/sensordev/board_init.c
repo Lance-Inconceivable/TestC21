@@ -45,6 +45,7 @@ void board_init(void);
 
 void system_board_init(void)
 {
+        struct system_pinmux_config adc_pin_config;
 	struct port_config pin_conf;
 	port_get_config_defaults(&pin_conf);
 
@@ -62,6 +63,7 @@ void system_board_init(void)
 	port_pin_set_output_level(RED_LED_PIN, true);
 
         /* CAN */
+
         /* Pins are active low.
          * The code below puts transceiver in standby mode
          * and disables silent mode.
@@ -82,10 +84,21 @@ void system_board_init(void)
 	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
 	port_pin_set_config(SR_LATCH_PIN, &pin_conf);
 	port_pin_set_output_level(SR_LATCH_PIN, false);
-#if 0
-	/* Set buttons as inputs */
-	pin_conf.direction  = PORT_PIN_DIR_INPUT;
-	pin_conf.input_pull = PORT_PIN_PULL_UP;
-	port_pin_set_config(BUTTON_0_PIN, &pin_conf);
-#endif
+
+        /* Configure the ADC inputs */
+
+	system_pinmux_get_config_defaults(&adc_pin_config);
+
+	/* Analog functions are all on MUX setting B */
+	adc_pin_config.input_pull   = SYSTEM_PINMUX_PIN_PULL_NONE;
+	adc_pin_config.mux_position = 1;
+
+	system_pinmux_pin_set_config(ADC_1_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_2_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_3_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_4_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_5_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_6_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_7_PIN, &adc_pin_config);
+	system_pinmux_pin_set_config(ADC_8_PIN, &adc_pin_config);
 }

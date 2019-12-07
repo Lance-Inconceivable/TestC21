@@ -1,5 +1,6 @@
 
 #include <asf.h>
+#include <adctest.h>
 
 struct adc_module adc_instance;
 struct sdadc_module sdadc_instance;
@@ -27,27 +28,33 @@ void sdadc_complete_callback(struct sdadc_module *module)
     return;
 }
 
-void configure_adc(void)
-{
-    struct adc_config config_adc;
-    adc_get_config_defaults(&config_adc);
-
-    config_adc.clock_prescaler = ADC_CLOCK_PRESCALER_DIV8;
-    config_adc.reference = ADC_REFERENCE_INTVCC2;
-#if 1
-    config_adc.positive_input = ADC_POSITIVE_INPUT_PIN8;
-#else
-    config_adc.positive_input = ADC_POSITIVE_INPUT_PIN0;
-#endif
-    config_adc.resolution = ADC_RESOLUTION_12BIT;
-    adc_init(&adc_instance, ADC0, &config_adc);
-}
-
 void configure_adc_callbacks(void)
 {
     adc_register_callback(&adc_instance, adc_complete_callback, 
         ADC_CALLBACK_READ_BUFFER);
     adc_enable_callback(&adc_instance, ADC_CALLBACK_READ_BUFFER);
+}
+
+void configure_adc(uint32_t adc_select)
+{
+    struct adc_config config_adc;
+    adc_get_config_defaults(&config_adc);
+
+    if (ADC0->CTRLA.reg & ADC_CTRLA_ENABLE) {
+        /* ADC is already configured, so just update the
+         * register that selects which ADC line to sample.
+         */
+        ADC0->INPUTCTRL.reg = adc_select;
+        return;
+    }
+
+    /* Derive 8 MHz sampling clock from 48 MHz GCLK_0 */
+    config_adc.clock_prescaler = ADC_CLOCK_PRESCALER_DIV8;
+    config_adc.reference = ADC_REFERENCE_INTVCC2;
+    config_adc.positive_input = adc_select;
+    config_adc.resolution = ADC_RESOLUTION_12BIT;
+    adc_init(&adc_instance, ADC0, &config_adc);
+    configure_adc_callbacks();
 }
 
 void adc_run(void)

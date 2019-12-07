@@ -3,7 +3,7 @@
 
 extern uint16_t adc_result_buffer[];
 extern uint32_t sdadc_result_buffer[];
-void configure_adc(void);
+void configure_adc(uint32_t adcselect);
 void configure_adc_callbacks(void);
 void adc_run(void);
 void adc_wait(void);

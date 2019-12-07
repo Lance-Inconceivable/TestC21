@@ -597,22 +597,19 @@ do_xgen(int ain)
     do_shift(arg);
 }
 
+int adc[8] = {ADC_1, ADC_2, ADC_3, ADC_4, ADC_5, ADC_6, ADC_7, ADC_8};
 static
-void do_adctest(void)
+void do_adctest(int adc_n)
 {
    int i;
    uint32_t timer;
-   configure_adc();
-   configure_adc_callbacks();
-microtimer_start();
-for (i = 0; i < 100; i++) {
+   if (adc_n < 1 || adc_n > 8) {
+       debug_msg("ADC input number must be in range [1 - 8]\r\n");
+       return;
+   }
+   configure_adc(adc[adc_n - 1]);
    adc_run();
    adc_wait();
-}
-
-timer = microtimer_stop();
-debug_msg("ADC microseconds =");
-printhex(microtimer_convert(timer), CRLF);
 
    /* When we get here, the result_buffer should contain
     * 128 16-bit samples
@@ -773,7 +770,7 @@ int dispatch_cmd(char *cmd)
             do_xgen(param);
             break;
         case CMD_ADCTEST:
-            do_adctest();
+            do_adctest(param);
             break;
         case CMD_SDTEST:
             do_sdtest();

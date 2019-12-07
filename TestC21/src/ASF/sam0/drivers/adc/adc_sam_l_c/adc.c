@@ -439,6 +439,7 @@ static inline void _adc_configure_ain_pin(uint8_t index, uint32_t pin)
 
 	uint32_t pin_map_result = PIN_INVALID_ADC_AIN;
 
+#if 0 /* JIMMY test hack */
 	if (pin <= _adc_extchannel_msb[index]) {
 		pin_map_result = pinmapping[pin >> ADC_INPUTCTRL_MUXPOS_Pos];
 
@@ -453,6 +454,7 @@ static inline void _adc_configure_ain_pin(uint8_t index, uint32_t pin)
 
 		system_pinmux_pin_set_config(pin_map_result, &config);
 	}
+#endif
 }
 
 /**
