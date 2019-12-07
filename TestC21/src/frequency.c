@@ -207,32 +207,29 @@ void evsys_configuration(void)
     events_allocate(&resource, &config);
 }
 
+/*
+ * Wait for a freqency measurement to complete and print the result.
+ */
 void printtc(void)
 {
     uint32_t my_cc0;
     uint32_t my_cc1;
     int rval;
-    volatile uint32_t temp;
 
     /* Clear any pending interrupts and grab the interrupt counter */
     system_interrupt_enter_critical_section();
     my_cc0 = cc0;
     my_cc1 = cc1;
-    temp = my_func_counter;
     my_func_counter = 0;
     tc_enable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL1);
     system_interrupt_leave_critical_section();
 
-    /* Spin for 3 interrupt cycles.  Replace this with semaphore and
-     * have ISR give sem when counter value is temp + 3.
-     */
     rval = xSemaphoreTake(freqSem, 10);
 
     /* Get the data and disable the interrupt */
     system_interrupt_enter_critical_section();
     my_cc0 = cc0;
     my_cc1 = cc1;
-    temp = my_func_counter;
     tc_disable_callback(&tc_instance, TC_CALLBACK_CC_CHANNEL1);
     system_interrupt_leave_critical_section();
     if (rval == pdFALSE) {

@@ -55,7 +55,7 @@ static int do_send_loop(uint32_t n);
 static int do_help(uint32_t cmd);
 static int do_baud(int baud);
 
-static gCanInit = 0;
+static int gCanInit = 0;
 
 static uint8_t gGenSelect = 0;
 
@@ -74,9 +74,9 @@ struct can_module *pCAN = &can_instance;
 
 void main_blinky( void )
 {
-    struct system_pinmux_config pin_config;
-    /* Set up I/O pins */
 #ifdef EXTERNAL_CLOCK_TEST
+    /* Set up I/O pins */
+    struct system_pinmux_config pin_config;
     /* Use this pin as the input source for testing the 
      * Atmel FREQM module.  Normally this pin is used for ADC
      * input (marked SIG_GEN2 on the sensordev board.
@@ -84,15 +84,6 @@ void main_blinky( void )
     system_pinmux_get_config_defaults(&pin_config);
     pin_config.mux_position = MUX_PA10H_GCLK_IO4;
     system_pinmux_pin_set_config(PIN_PA10H_GCLK_IO4, &pin_config);
-#endif
-
-#if 0
-    /* Configure frequency input pin.  By default pin is a GPIO input.
-     * Just turn off the pull-up.
-     */
-    system_pinmux_get_config_defaults(&pin_config);
-    pin_config.input_pull = SYSTEM_PINMUX_PIN_PULL_NONE;
-    system_pinmux_pin_set_config(PORT_PA18, &pin_config);
 #endif
 
     vUARTCommandConsoleStart(configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY);
@@ -493,8 +484,8 @@ void do_eep(void)
      int i;
      nvm_erase_row((uint32_t) p);
      strcpy(buffer, "deadbeefbabebabedeadbeefbabebabedeadbeefbabebabedeadbeefbabebabe");
-     nvm_write_buffer((uint32_t) p, buffer, 64);
-     nvm_write_buffer(((uint32_t) p) + 64, buffer, 64);
+     nvm_write_buffer((uint32_t) p, (uint8_t *) buffer, 64);
+     nvm_write_buffer(((uint32_t) p) + 64, (uint8_t *) buffer, 64);
      for (i = 0; i < 40; i++)
         printhex(*p++, 1);
 }
@@ -513,12 +504,13 @@ int do_help(uint32_t cmd)
     return (0);
 }
 
-static void sr_strobe()
+static void sr_strobe(void)
 {
     port_pin_set_output_level(SR_CLK_PIN, 1);
     port_pin_set_output_level(SR_CLK_PIN, 0);
 }
 
+static
 int do_shift(unsigned int val)
 {
     uint8_t mask = 0x80;
@@ -544,9 +536,11 @@ int do_shift(unsigned int val)
     port_pin_set_output_level(SR_LATCH_PIN, 1);
     sr_strobe();
     port_pin_set_output_level(SR_LATCH_PIN, 0);
+    return (0);
 }
 
-do_gen_select(int ain, int r)
+static
+int do_gen_select(int ain, int r)
 {
     uint8_t bit;
     uint8_t leftshift;
@@ -574,12 +568,12 @@ do_gen_select(int ain, int r)
     gGenSelect |= (bit << leftshift);
     arg = ~gGenSelect;
     arg &= 0xff;
-    do_shift(arg);
+    return (do_shift(arg));
 }
 
-do_xgen(int ain)
+static
+int do_xgen(int ain)
 {
-    uint8_t bit;
     uint8_t leftshift;
     uint8_t mask;
     unsigned int arg;
@@ -594,7 +588,7 @@ do_xgen(int ain)
     gGenSelect &= ~mask;
     arg = ~gGenSelect;
     arg &= 0xff;
-    do_shift(arg);
+    return (do_shift(arg));
 }
 
 int adc[8] = {ADC_1, ADC_2, ADC_3, ADC_4, ADC_5, ADC_6, ADC_7, ADC_8};
@@ -602,7 +596,6 @@ static
 void do_adctest(int adc_n)
 {
    int i;
-   uint32_t timer;
    if (adc_n < 1 || adc_n > 8) {
        debug_msg("ADC input number must be in range [1 - 8]\r\n");
        return;

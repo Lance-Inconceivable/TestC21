@@ -7,7 +7,7 @@ struct sdadc_module sdadc_instance;
 
 #define ADC_SAMPLES 128
 uint16_t adc_result_buffer[ADC_SAMPLES];
-uint32_t sdadc_result_buffer[ADC_SAMPLES];
+int32_t sdadc_result_buffer[ADC_SAMPLES];
 
 volatile bool adc_read_done = false;
 volatile bool sdadc_read_done = false;
@@ -16,12 +16,14 @@ volatile bool sdadc_read_done = false;
  * We can poll on this flag for now.  The right way to do it is to give a
  * semaphore indicating that the result_buffer is full.
  */
+static
 void adc_complete_callback(struct adc_module *module)
 {
     adc_read_done = true;
     return;
 }
 
+static
 void sdadc_complete_callback(struct sdadc_module *module)
 {
     sdadc_read_done = true;

@@ -19,6 +19,7 @@ int can_send(uint32_t id, unsigned char *data);
 int can_utils_init(void);
 void can_reset_fifo(void);
 void microtimer_init(void);
+uint32_t microtimer_read(void);
 uint32_t microtimer_stop(void);
 uint32_t microtimer_convert(uint32_t x);
 void microtimer_start(void);
