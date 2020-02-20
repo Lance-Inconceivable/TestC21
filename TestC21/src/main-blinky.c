@@ -141,6 +141,7 @@ static void do_can_init(void)
 
     can_init(pCAN, CAN0, &config_can);
 
+	/* initialize CAN filters */
     can_utils_init();
 
 #ifdef CAN_LOOPBACK
@@ -224,6 +225,7 @@ top:
 
 /* This is a CAN RX task
  * If it receives 0x422, it responds with 0x423.
+ * If it receives J1939 PGN 0xEF00 from source 0xAA, it responds with 0x18EFAA01.
  * Other packets are echoed.
  * Works for STD and EXT. Assumes payload is 8 bytes.
  */
@@ -243,6 +245,11 @@ static void can_rx_task(void *dummy)
     rx_filter.mask = MATCH_ALL;
     rx_filter.ext = 0;
     can_filter_add(&rx_filter);
+    /* Add a EID filter range for testing */
+    rx_filter.filter = 0x00EF01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
+    rx_filter.mask   = 0x00F800FF;
+    rx_filter.ext    = 1;
+    can_filter_add(&rx_filter);
     gHaveReader = 1;
     debug_msg("Reader task started\r\n");
     while (1) {
@@ -258,16 +265,25 @@ static void can_rx_task(void *dummy)
         /* Right justify if not an extended ID */
         if (!pMsg->R0.bit.XTD)
             id >>= 18;
+		else
+			id &= (~0x1C000000);//remove Priority bits
 
         /* Handle the message */
-        switch (id) {
-            case 0x422:
-                debug_msg("RX 0x422\r\n");
-                /* Send 0x423 in response */
-                /* Could re-use received payload, but doing memcpy */
-                memcpy(can_data, &pMsg->data, 8);
-                can_send(0x423, can_data);
-                break;
+        switch (id) { 
+	        case 0x422:
+	        debug_msg("RX 0x422\r\n");
+	        /* Send 0x423 in response */
+	        /* Could re-use received payload, but doing memcpy */
+	        memcpy(can_data, &pMsg->data, 8);
+	        can_send(0x423, can_data);
+	        break;
+	        case 0xEF01AA: //from AA to AS01
+	        debug_msg("RX from AA(0x18EF01AA)\r\n");
+	        /* Send 0x18EFAA01 in response */
+	        /* Could re-use received payload, but doing memcpy */
+	        memcpy(can_data, &pMsg->data, 8);
+	        can_send(0x18EFAA01, can_data);
+	        break;
             default:
                 debug_msg("RX! ID = ");
                 printhex(id, 0);
@@ -367,9 +383,11 @@ int do_send_loop(uint32_t n)
     int rval;
     uint32_t index;
     uint32_t count = 0;
+    uint32_t m = n;
 #ifdef CAN_LOOPBACK
     CAN_HW_FILTER rx_filter;
     static char add_filter = 1;
+
     if (gCanInit == 0)
         do_can_init();
     if (add_filter) {
@@ -390,6 +408,26 @@ int do_send_loop(uint32_t n)
             index = 7;
         can_data[index] = n & 0xff;
         rval = can_send(0x422, can_data);
+        if (rval == 0)
+            count++;
+        else
+            break;
+
+#ifdef CAN_LOOPBACK
+        debug_msg("rx count = ");
+        printhex(can_rx_count, CRLF);
+#endif
+#if 0
+        vTaskDelay(1);    /* Delay 10 msec */
+#endif
+    }
+    while (m--) {
+        memset(can_data, 0, 8);
+        index = m >> 8;
+        if (index > 7)
+            index = 7;
+        can_data[index] = m & 0xff;
+        rval = can_send(0x18EFAA01, can_data);
         if (rval == 0)
             count++;
         else

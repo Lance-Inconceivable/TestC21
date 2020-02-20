@@ -294,7 +294,10 @@ debug_msg("Wait for FIFO!\r\n");
     putindex = (val >> 16) & 0x1f;
     msg = &pTxFIFO[putindex];
     can_get_tx_buffer_element_defaults(msg);
-    msg->T0.reg = CAN_TX_ELEMENT_T0_STANDARD_ID(id); 
+	if(id <= 0x7FF) //standard ID message
+		msg->T0.reg = CAN_TX_ELEMENT_T0_STANDARD_ID(id); 
+	else //I don't think we will ever have a Extended message ID less than 0x800(0x7FF)
+		msg->T0.reg = CAN_TX_ELEMENT_T0_EXTENDED_ID(id); 
     for (i = 0; i < 8; i++) {
         msg->data[i] = data[i];
     }
