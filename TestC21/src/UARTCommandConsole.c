@@ -135,7 +135,7 @@ uint16_t ulong_to_string(uint32_t number, char *ascii)
         if ( remainder <= 9 )
             strptr[i++] = (char)(remainder + 0x30);	// 0-9
         else
-            strptr[i++] = (char)(remainder + 0x57);	// a-f
+            strptr[i++] = (char)(remainder + 0x37);	// A-F
         number >>= 4;                                   /* divide by 16 */
     }
 

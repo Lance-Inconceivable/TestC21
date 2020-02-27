@@ -1,11 +1,14 @@
 
 #include <ASF.h>
 #include "can_utils.h"
+#include "can.h"
+#include "conf_error.h"
+#include "UARTCommandConsole.h"
 
 #define MEM_BASE 0x20000000
 
 /* Only using 1 can controller, so make it a global, rather than
- * passing in fuction arglist.
+ * passing in function arglist.
  */
 
 extern struct can_module *pCAN;
@@ -14,6 +17,8 @@ int gHaveReader = 0;  /* Flag for ISR */
 
 struct can_tx_element *pTxFIFO;
 struct can_rx_element_fifo_0 *pRxFIFO;
+
+struct can_rx_element_fifo_0 CAN_Rx_Packet;
 
 static SemaphoreHandle_t canRxSemaphore = (SemaphoreHandle_t) NULL;
 
@@ -63,6 +68,12 @@ int can_filter_add(CAN_HW_FILTER *x)
         filter.S0.bit.SFID2 = x->mask;
         can_set_rx_standard_filter(pCAN, &filter, i); 
     }
+	
+	printhex(i, 0);
+	debug_msg(" location added filter: 0x");
+	printhex(x->filter, 0);
+	debug_msg(" mask: 0x");
+	printhex(x->mask, 1);
     return i;
 }
 
@@ -225,7 +236,7 @@ retry:
             goto retry;    /* re-read status to confirm that this isn't an old semaphore */
         }
         else
-            return (-1);         /* timeout */
+            return RX_TIMEOUT;     /* timeout (-4)*/
     }
 
     index = (status >> 8) & 0x3f;
@@ -305,6 +316,55 @@ debug_msg("Wait for FIFO!\r\n");
     status = can_tx_transfer_request(pCAN, 1 << putindex); 
     return (-status);   /* Status codes are positive in ASF */
 }
+
+int can_fifo_read(struct can_rx_element_fifo_0* packet, uint mstimeout)
+{
+	int index;
+	uint8_t i;
+	
+	/* Returns the FIFO index of a CAN message, or -1 if timeout expires
+	* Note: Assumes module CAN0 and FIFO0.  */
+	index = can_msg_get(mstimeout);
+
+	/*Retrieve CAN data at index in FIFO0 */
+	if (index >= 0) {
+		struct can_rx_element_fifo_0 *pMsg = pRxFIFO + index;
+		packet->R0.reg = pMsg->R0.reg;
+		for (i = 0; i < 8; i++) {
+			packet->data[i] = pMsg->data[i];
+		}
+		debug_msg("msg rxd, ID = 0x");
+		printhex(packet->R0.bit.ID, 0);
+		debug_msg(", val = 0x");
+		printhex(packet->data[0], 0);
+		printhex(packet->data[1], 0);
+		printhex(packet->data[2], 0);
+		printhex(packet->data[3], 1);
+		can_msg_free(index);
+	}
+	else{
+		debug_msg("No packets\r\n");
+		return index;
+	}
+
+	return SUCCESS;
+}
+
+int can_receive(unsigned int ArbID, int mstimeOut)
+{
+	int status = SUCCESS;
+
+	/*  Clean out previous CAN receive */
+	CAN_Rx_Packet.R0.bit.ID = 0x00;
+
+	// throw in watchdog for timeout
+	do status = can_fifo_read(&CAN_Rx_Packet, mstimeOut);
+	while(CAN_Rx_Packet.R0.bit.ID != ArbID && status == SUCCESS);
+	
+	return status;
+}
+
+
 
 /* CAN Interrupts */
 
@@ -401,11 +461,60 @@ microtimer_stop(void)
 }
 
 /* Multiply incoming value by 30.5 to get microseconds */
-uint32_t
+uint32_t inline
 microtimer_convert(uint32_t x)
 {
     uint32_t val;
     val = 30 * x;
     val += (x >> 1);
     return (val);
+}
+/* Multiply incoming value by .0305 to get milliseconds */
+/* Divide incoming value by 32.79 to get milliseconds */
+/* 2^5 (or timer >> 5) is divide by 32.  Assuming correct for speed purposes */
+uint32_t inline
+microtimer_convert2ms(uint32_t x)
+{
+    uint32_t val;
+    val = x >> 5;
+    return (val);
+}
+void microtimer_delayus(uint32_t usdelay)
+{
+	uint32_t endval, val;
+	val = usdelay >> 5; //divide by 32(30.5)
+	endval = microtimer_read() + val;
+	do 
+	{ val = microtimer_read();
+	} while(val < endval);
+}
+
+
+void CAN_Copy_TxBuf(unsigned char *src, unsigned char src_count, unsigned char *dest, unsigned char dest_index, unsigned char padding)
+{
+	unsigned char i = 0;
+
+	/* Set the data contents. */
+	for (i = 0 ; i < src_count && (dest_index+i) < 8 ; i++)
+	{
+		dest[dest_index+i] = src[i];
+	}
+
+	/* Reset the remaining bytes. */
+	while ( (dest_index+i) < 8 )
+	{
+		dest[dest_index+i] = padding;
+		i++;
+	}
+}
+
+void CAN_Copy_RxBuf(unsigned char *src, unsigned char *dest, unsigned char count)
+{
+	unsigned char i = 0;
+
+	/* Copy the data contents. */
+	for (i=0; i < count; i++)
+	{
+		dest[i]=src[i];
+	}
 }

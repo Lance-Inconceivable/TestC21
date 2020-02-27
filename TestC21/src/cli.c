@@ -54,7 +54,7 @@ CLICMDS cli[NUM_COMMANDS] = {
     {"shift", "\tshift  <value>\r\n",              CMD_SHIFT,
             "\t! Put an 8-bit <value> in the shift register\r\n"},
     {"gen", "\tgen  <analog_input_num> <K-ohms> \r\n", CMD_GEN,
-            "\t! Put 2 or 10 Kohms reistance on analogg input 0-3\r\n"},
+            "\t! Put 2 or 10 Kohms resistance on analog input 0-3\r\n"},
     {"xgen", "\txgen  <analog_input_num>\r\n",      CMD_XGEN,
             "\t! Disable resistance on analog input 0-3\r\n"},
     {"adctest", "\tadctest [1-8]\r\n",              CMD_ADCTEST,
@@ -66,7 +66,11 @@ CLICMDS cli[NUM_COMMANDS] = {
     {"freqcount", "\tfreqcount\r\n",                CMD_FREQCOUNT,
             "\t! Count frequency at GPIO pin\r\n"},
     {"freqshow", "\tfreqshow\r\n",                  CMD_FREQSHOW,
-            "\t! Print value of frequency counter\r\n"},
+	    "\t! Print value of frequency counter\r\n"},
+    {"arbitr", "\t'j1939arbitration\r\n",           CMD_J1939ARBITRATION,
+		"\t! Run can bus arbitration\r\n"},
+	{"addclaim", "\t'j1939 address claim\r\n",      CMD_J1939CLAIM,
+		"\t! Run address claim\r\n"},
 };
 
 const
@@ -171,6 +175,8 @@ int16_t get_command(char *buf, uint32_t *param, uint32_t *param2)
         cmd == CMD_FREQM   || 
         cmd == CMD_FREQCOUNT || 
         cmd == CMD_FREQSHOW || 
+        cmd == CMD_J1939ARBITRATION ||
+        cmd == CMD_J1939CLAIM ||
         cmd == CMD_SEND)  
         return (cmd);
 

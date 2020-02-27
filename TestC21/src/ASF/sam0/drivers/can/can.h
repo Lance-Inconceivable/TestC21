@@ -45,6 +45,9 @@
  * \name Message RAM
  * @{
  */
+ 
+ /* Data type representing data field in CAN packet. */
+ typedef uint8_t    CAN_DATA[8];
 
 /* -------- CAN_RX_ELEMENT_R0 : (CAN RX element: 0x00) (R/W 32) Rx Element R0 Configuration -------- */
 typedef union {
@@ -165,14 +168,14 @@ typedef union {
 #define CAN_TX_ELEMENT_T1_DLC_Pos         16
 #define CAN_TX_ELEMENT_T1_DLC_Msk         (0xFul << CAN_TX_ELEMENT_T1_DLC_Pos)
 #define CAN_TX_ELEMENT_T1_DLC(value)      ((CAN_TX_ELEMENT_T1_DLC_Msk & ((value) << CAN_TX_ELEMENT_T1_DLC_Pos)))
-#define   CAN_TX_ELEMENT_T1_DLC_DATA8_Val        0x8ul  /**< \brief (CAN_RXESC) 8 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA12_Val       0x9ul  /**< \brief (CAN_RXESC) 12 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA16_Val       0xAul  /**< \brief (CAN_RXESC) 16 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA20_Val       0xBul  /**< \brief (CAN_RXESC) 20 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA24_Val       0xCul  /**< \brief (CAN_RXESC) 24 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA32_Val       0xDul  /**< \brief (CAN_RXESC) 32 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA48_Val       0xEul  /**< \brief (CAN_RXESC) 48 byte data field */
-#define   CAN_TX_ELEMENT_T1_DLC_DATA64_Val       0xFul  /**< \brief (CAN_RXESC) 64 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA8_Val   0x8ul  /**< \brief (CAN_RXESC) 8 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA12_Val  0x9ul  /**< \brief (CAN_RXESC) 12 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA16_Val  0xAul  /**< \brief (CAN_RXESC) 16 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA20_Val  0xBul  /**< \brief (CAN_RXESC) 20 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA24_Val  0xCul  /**< \brief (CAN_RXESC) 24 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA32_Val  0xDul  /**< \brief (CAN_RXESC) 32 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA48_Val  0xEul  /**< \brief (CAN_RXESC) 48 byte data field */
+#define CAN_TX_ELEMENT_T1_DLC_DATA64_Val  0xFul  /**< \brief (CAN_RXESC) 64 byte data field */
 #define CAN_TX_ELEMENT_T1_BRS_Pos         20
 #define CAN_TX_ELEMENT_T1_BRS             (0x1ul << CAN_TX_ELEMENT_T1_BRS_Pos)
 #define CAN_TX_ELEMENT_T1_FDF_Pos         21
@@ -276,20 +279,20 @@ typedef union {
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_Pos           27
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_Msk           (0x7ul << CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_Pos)
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC(value)        ((CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_Msk & ((value) << CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_Pos)))
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_DISABLE_Val     0
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STF0M_Val       1
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STF1M_Val       2
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_REJECT_Val      3
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIORITY_Val    4
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIF0M_Val      5
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIF1M_Val      6
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STRXBUF_Val     7
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_DISABLE_Val   0
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STF0M_Val     1
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STF1M_Val     2
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_REJECT_Val    3
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIORITY_Val  4
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIF0M_Val    5
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_PRIF1M_Val    6
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFEC_STRXBUF_Val   7
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_Pos            30
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_Msk            (0x3ul << CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_Pos)
 #define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(value)         ((CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_Msk & ((value) << CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_Pos)))
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_RANGE          CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(0)
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_DUAL           CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(1)
-#define   CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_CLASSIC        CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(2)
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_RANGE          CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(0)
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_DUAL           CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(1)
+#define CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT_CLASSIC        CAN_STANDARD_MESSAGE_FILTER_ELEMENT_S0_SFT(2)
 
 /**
  * \brief CAN standard message ID filter element structure.

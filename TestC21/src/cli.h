@@ -27,8 +27,10 @@
 #define CMD_FREQM 19
 #define CMD_FREQCOUNT 20
 #define CMD_FREQSHOW 21
+#define CMD_J1939ARBITRATION 22
+#define CMD_J1939CLAIM 23
 
-#define NUM_COMMANDS 21
+#define NUM_COMMANDS 23
 
 int16_t get_command(char *buf, uint32_t *param, uint32_t *param2);
 const char *get_help(uint8_t cmd);

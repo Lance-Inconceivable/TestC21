@@ -314,7 +314,7 @@
       </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
-    <avrtoolserialnumber>J41800089188</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800090988</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x1101050A</avrdeviceexpectedsignature>
     <avrtoolinterface>SWD</avrtoolinterface>
     <com_atmel_avrdbg_tool_edbg>
@@ -337,7 +337,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800089188</ToolNumber>
+      <ToolNumber>J41800090988</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
   </PropertyGroup>
@@ -981,10 +981,19 @@
     <None Include="src\config\conf_extint.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\config\conf_error.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\frequency.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\frequency.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\J1939_communication.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\J1939_communication.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\UARTCommandConsole.c">

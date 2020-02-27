@@ -35,6 +35,8 @@
 #include "can_utils.h"
 #include "adctest.h"
 #include "frequency.h"
+#include "J1939_communication.h"
+#include "conf_error.h"
 
 /*-----------------------------------------------------------*/
 
@@ -49,11 +51,16 @@ unsigned char can_data[8];
 int dispatch_cmd(char *cmd);
 
 /* Forward declare some functions to quell compiler warnings */
+static void can_startup(void);
 static int do_detect(void);
 static void do_start_reader(void);
 static int do_send_loop(uint32_t n);
 static int do_help(uint32_t cmd);
 static int do_baud(int baud);
+static void do_j1939addressarbitration(void);
+void do_j1939AddressClaim(void);
+uint32_t Buf2UIntLSB(unsigned char *buff, int num);
+int32_t HexString2Long(char *ascii, int radix);
 
 static int gCanInit = 0;
 
@@ -93,7 +100,10 @@ void main_blinky( void )
     port_pin_set_output_level(GREEN_LED_PIN, false);
 
     microtimer_init();
+	microtimer_start();
 
+	//can_startup();
+	
     vTaskStartScheduler();
 
     /* If all is well, the scheduler will now be running, and the following
@@ -163,7 +173,21 @@ static void do_can_init(void)
     gCanInit = 1;
 }
 
-
+static void can_startup(void)
+{
+	CAN_HW_FILTER rx_filter;
+	
+	if (gCanInit == 0)
+		do_can_init();
+	
+	/* Add the EID filter range */
+	rx_filter.filter = 0x00EF01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
+	rx_filter.mask   = 0x00F80000;
+	rx_filter.ext    = 1;
+	can_filter_add(&rx_filter);
+	
+	
+}
 
 /* Send <count> 'ping' packets.
  * If we get a ping replay, immediately send the next packet, otherwise wait 1 sec.
@@ -247,7 +271,7 @@ static void can_rx_task(void *dummy)
     can_filter_add(&rx_filter);
     /* Add a EID filter range for testing */
     rx_filter.filter = 0x00EF01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
-    rx_filter.mask   = 0x00F800FF;
+    rx_filter.mask   = 0x00F80000;
     rx_filter.ext    = 1;
     can_filter_add(&rx_filter);
     gHaveReader = 1;
@@ -458,6 +482,27 @@ int do_send_loop(uint32_t n)
         printhex(pCAN->hw->IR.reg, CRLF);
     }
     return (rval);
+}
+
+void do_j1939addressarbitration(void)
+{
+	debug_msg("J1939 bus arbitration called!\r\n");
+	
+	/* Make sure we're initialized */
+	can_startup();
+	
+	J1939_AddressArbitration_WaitforECMAddrClaim(250);
+	//J1939_NetworkMgmt_AddressClaim();
+
+}
+void do_j1939AddressClaim(void)
+{
+	debug_msg("J1939 bus arbitration called!\r\n");
+	
+	/* Make sure we're initialized */
+	can_startup();
+	
+	J1939_NetworkMgmt_AddressClaim();
 }
 
 static
@@ -820,6 +865,12 @@ int dispatch_cmd(char *cmd)
             printtc();
 #endif
             break;
+        case CMD_J1939ARBITRATION:
+            do_j1939addressarbitration();  /* Test can bus arbitration */
+        break;
+        case CMD_J1939CLAIM:
+            do_j1939AddressClaim();  /* Test can bus arbitration */
+        break;
         default:
             rval = -1;
             do_help(0);
@@ -829,4 +880,75 @@ int dispatch_cmd(char *cmd)
         return (0);
     else
         return (rval);
+}
+
+uint32_t Buf2UIntLSB(unsigned char *buff, int num)
+{
+	int i;
+	uint32_t result = 0;
+
+	if(num>4)	return RETURN_ERROR; //will overflow result variable
+
+	for(i=num-1;i>=0;i--)
+	{
+		result = result << 8;
+		result |= buff[i];
+	}
+	return result;
+}
+
+int32_t HexString2Long(char *ascii, int radix)
+{
+	int     i=0, c=0;
+	char    *asciiptr = ascii;
+	int32_t number=0, tempi;
+
+	if (radix == 10)	//Decimal input
+	{
+		c=1;
+		while(*asciiptr != '\0')
+		{
+			asciiptr++;
+			if(++i > 11) return 0;	//number is too big
+		}
+
+		asciiptr--;
+		do
+		{
+			if(*asciiptr == '-'){	//negative
+				number *= -1;
+				break;	//while loop
+			}
+			else if(*asciiptr > 0x39 || *asciiptr < 0x30)	//not a decimal string
+			return 0;
+			else {
+				tempi = *asciiptr - 0x30;
+				number += tempi * c;
+				c*=10;
+			}
+		}while(asciiptr-- != ascii);
+	}else
+	if (radix == 16)	//hex input string
+	{
+		while(*asciiptr != '\0')
+		{
+			asciiptr++;
+			if(++i > 8) return 0;	//number is too big
+		}
+		asciiptr--;
+		do
+		{
+			if(*asciiptr >= 0x41 && *asciiptr <= 0x46){	//
+				tempi = *asciiptr - 0x37;
+			}
+			else if(*asciiptr >= 0x30 || *asciiptr <= 0x39){	//
+				tempi = *asciiptr - 0x30;
+			}
+			else
+			return 0;
+			number |= tempi << (4*c++);
+		}while(asciiptr-- != ascii);
+	}
+
+	return number;
 }
