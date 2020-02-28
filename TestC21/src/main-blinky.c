@@ -256,6 +256,7 @@ static void can_rx_task(void *dummy)
     if (gCanInit == 0)
         do_can_init();
 
+    can_stop(pCAN);
     /* Add a 422 filter for testing */
     rx_filter.filter = 0x422;
     rx_filter.mask = MATCH_ALL;
@@ -267,10 +268,11 @@ static void can_rx_task(void *dummy)
     rx_filter.ext    = 1;
     can_filter_add(&rx_filter);
     rx_filter.filter = 0x00EA01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
-    rx_filter.mask   = 0x00FF0000;
+    rx_filter.mask   = 0x00FF0100;
     rx_filter.ext    = 1;
     can_filter_add(&rx_filter);
     gHaveReader = 1;
+	can_start(pCAN);
     debug_msg("Reader task started\r\n");
     while (1) {
         /* Get a packet */
@@ -546,7 +548,7 @@ void do_j1939addressarbitration(void)
 
 void do_j1939AddressClaim(void)
 {
-	debug_msg("J1939 bus arbitration called!\r\n");
+	debug_msg("J1939 address claim called!\r\n");
 	
 	/* Make sure we're initialized */
 	can_startup();
@@ -828,13 +830,16 @@ int do_baud(int baud)
  */
 void do_start_reader_task_init(void)
 {
-    xTaskCreate(can_rx_task,				/* Task entry point. */
-        "CAN_Rx",							/* Task name */
-        configMINIMAL_STACK_SIZE *3,		/* Stack size */
-        (void *) 0,                         /* The parameter passed to the task */
-        tskIDLE_PRIORITY + 1,               /* The priority assigned to the task. */
-        &rxTaskHandle	                    /* Not used.  Just illustrates creating sync handle */
-    );	
+	if(rxTaskHandle == NULL)
+	{
+		xTaskCreate(can_rx_task,				/* Task entry point. */
+			"CAN_Rx",							/* Task name */
+			configMINIMAL_STACK_SIZE *3,		/* Stack size */
+			(void *) 0,                         /* The parameter passed to the task */
+			tskIDLE_PRIORITY + 1,               /* The priority assigned to the task. */
+			&rxTaskHandle	                    /* Not used.  Just illustrates creating sync handle */
+		);	
+	}
 }
 
 int dispatch_cmd(char *cmd)
