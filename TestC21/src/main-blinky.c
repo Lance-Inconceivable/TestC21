@@ -353,7 +353,7 @@ static void can_rx_task(void *dummy)
 					 //get ready to receive firmware update
 					break;
 					case 0x12: //General information request 
-						
+						send_GeneralInfo();
 					break;
 				}
 			}

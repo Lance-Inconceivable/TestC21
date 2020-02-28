@@ -42,6 +42,9 @@ void J1939_NetworkMgmt_Task_Init(void);
 void J1939_NetworkMgmt_IncomingAddressClaim(void);
 void J1939_NetworkMgmt_IncomingRequestforAddressesClaimed(void);
 
+void send_GeneralInfo(void);
+void send_SensorData(void);
+
 #define AA_SA 0xAA
 extern unsigned char 	SENSOR_SA;		//= 0xF9;	//Can change during startup(not implemented)
 //extern CAN_HW_FILTER J1939Filter_TP;	//TP is Transfer Protocol: 0xE800, EA, EB, EC, ED -- also works for xEF00(proprietary messages)

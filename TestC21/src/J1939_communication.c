@@ -22,14 +22,14 @@
 
 //#define 	  AA_SA 	   0x00 //declared in header
 unsigned char SENSOR_SA    = 0xF9;	//Can be any address 0xF9 to 0xFD
-uint64_t AS_NAME = 0x0000810082200000LL;
+uint64_t AS_NAME = 0x00008B0082200000LL;
 uint64_t contesting_NAME;
 /*	Start Position	Length		Parameter Name 				Value(hex)
-	1 - 3.1 		21 bits		Identity Number 			0xsnsns (Last 21bits of AA serial number)
+	1 - 3.1 		21 bits		Identity Number 			0x1FFFFF (Last 21bits of AA serial number)
 	3.6 - 4 		11 bits 	Manufacturer Code			0x411 (EZ Lynk)
 	5.1 			3 bits 		ECU Instance				0 (First Instance)
 	5.4 			5 bits 		Function Instance			0 (First Instance)
-	6 				8 bits 		Function					0x81 (Off-board diagnostic-service tool)
+	6 				8 bits 		Function					0x8B (Data Logger)
 	7.1 			1 bit		Reserved					0 (N/A)
 	7.2 			7 bits 		Vehicle System				0 (Non-specific System)
 	8.1 			4 bits		Vehicle System Instance		0 (First Instance)
@@ -822,10 +822,22 @@ void send_GeneralInfo(void)
 	Byte 7:		Reserved
 	Byte 8:		Reserved
 	*/
+	unsigned int PGN = 0x00FF00;
+	unsigned char data[8];
+	data[0] = 0x12;
+	data[1] = 0x00; //firmware v0x0001
+	data[2] = 0x01;
+	data[3] = 0x03; //transmit rate = 1000ms(0x3E8)
+	data[4] = 0xE8;
+	data[5] = 0x04; //4 sensors detected
+	data[6] = 0x55;
+	data[7] = 0x55;
+	J1939_Send(PGN, AA_SA, SENSOR_SA, data, 8);
 }
 
 void send_SensorData(void)
 {
+	uint16_t var;
 	/*
 	PGN 0x00FF01 + SA(source address of the AS).
 	Byte 1.1-1.4:	data type (0 - currently only one data type)
@@ -838,5 +850,18 @@ void send_SensorData(void)
 	Byte 5.7-5.8: 	reserved
 	Byte 6: 	    reserved
 	Byte 7-8:	    sensor data (0 - 65535)
-	*/
+	*/	
+	unsigned int PGN = 0x00FF01;
+	unsigned char data[8];
+	data[0] = 0x00;
+	data[1] = 0x00;
+	var = 0x1234;//getsensor1_data();
+	data[2] = (uint8_t)(var>>8);
+	data[3] = (uint8_t)var;
+	data[4] = 0x10;
+	data[5] = 0x00;	
+	var = 0xABCD;//getsensor2_data();
+	data[6] = (uint8_t)(var>>8);
+	data[7] = (uint8_t)var;
+	J1939_Send(PGN, AA_SA, SENSOR_SA, data, 8);
 }
