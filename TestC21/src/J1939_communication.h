@@ -21,7 +21,7 @@
 
 int J1939_Request_Data_Transfer(uint32_t PDU, unsigned char* data);
 int J1939_AddressArbitration(void);
-int J1939_AddressArbitration_WaitforECMAddrClaim(unsigned int timeout);
+int J1939_AddressArbitration_RequestAutoAgentAddrClaim(unsigned int timeout);
 void J1939_InitializeNAME(void);
 int8_t J1939_NetworkMgmt_AddressClaim(void);
 int J1939_Send(unsigned int PGN, unsigned char destination, unsigned char source, unsigned char *data, unsigned int len);
@@ -35,9 +35,10 @@ void J1939_Set_Priority(int priority);
 int J1939_Get_Priority(void);
 void J1939_ClearRXdmsgs(void);
 
+void J1939_NetworkMgmt_Task_Entry(void *argv);
 int8_t getJ1939addressclaimed(void); //ONLY allowed to use J1939 bus when an address has been successfully claimed.
 void set_contesting_NAME(uint8_t* buffer);
-int J1939_NetworkMgmt_Task_Init(void);
+void J1939_NetworkMgmt_Task_Init(void);
 void J1939_NetworkMgmt_IncomingAddressClaim(void);
 void J1939_NetworkMgmt_IncomingRequestforAddressesClaimed(void);
 

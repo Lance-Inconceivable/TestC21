@@ -67,9 +67,9 @@ CLICMDS cli[NUM_COMMANDS] = {
             "\t! Count frequency at GPIO pin\r\n"},
     {"freqshow", "\tfreqshow\r\n",                  CMD_FREQSHOW,
 	    "\t! Print value of frequency counter\r\n"},
-    {"arbitr", "\t'j1939arbitration\r\n",           CMD_J1939ARBITRATION,
+    {"arbitr", "\tj1939arbitration\r\n",           CMD_J1939ARBITRATION,
 		"\t! Run can bus arbitration\r\n"},
-	{"addclaim", "\t'j1939 address claim\r\n",      CMD_J1939CLAIM,
+	{"addclaim", "\tj1939 address claim\r\n",      CMD_J1939CLAIM,
 		"\t! Run address claim\r\n"},
 };
 

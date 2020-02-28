@@ -53,7 +53,7 @@ int dispatch_cmd(char *cmd);
 /* Forward declare some functions to quell compiler warnings */
 static void can_startup(void);
 static int do_detect(void);
-static void do_start_reader(void);
+static void do_start_reader_task_init(void);
 static int do_send_loop(uint32_t n);
 static int do_help(uint32_t cmd);
 static int do_baud(int baud);
@@ -102,10 +102,9 @@ void main_blinky( void )
     microtimer_init();
 	microtimer_start();
 
-	//can_startup();
 	
     vTaskStartScheduler();
-
+	
     /* If all is well, the scheduler will now be running, and the following
     line will never be reached.  If the following line does execute, then
     there was insufficient FreeRTOS heap memory available for the idle and/or
@@ -151,7 +150,6 @@ static void do_can_init(void)
 
     can_init(pCAN, CAN0, &config_can);
 
-	/* initialize CAN filters */
     can_utils_init();
 
 #ifdef CAN_LOOPBACK
@@ -174,18 +172,12 @@ static void do_can_init(void)
 }
 
 static void can_startup(void)
-{
-	CAN_HW_FILTER rx_filter;
-	
+{	
 	if (gCanInit == 0)
 		do_can_init();
-	
-	/* Add the EID filter range */
-	rx_filter.filter = 0x00EF01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
-	rx_filter.mask   = 0x00F80000;
-	rx_filter.ext    = 1;
-	can_filter_add(&rx_filter);
-	
+		
+	do_start_reader_task_init();
+	J1939_NetworkMgmt_Task_Init();
 	
 }
 
@@ -271,7 +263,11 @@ static void can_rx_task(void *dummy)
     can_filter_add(&rx_filter);
     /* Add a EID filter range for testing */
     rx_filter.filter = 0x00EF01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
-    rx_filter.mask   = 0x00F80000;
+    rx_filter.mask   = 0x00FE0000;
+    rx_filter.ext    = 1;
+    can_filter_add(&rx_filter);
+    rx_filter.filter = 0x00EA01AA;  //TP is Transfer Protocol: 0xE800, EA, EB, EC, ED, EE -- also works for xEF00(proprietary messages) From address 0xAA.
+    rx_filter.mask   = 0x00FF0000;
     rx_filter.ext    = 1;
     can_filter_add(&rx_filter);
     gHaveReader = 1;
@@ -293,22 +289,73 @@ static void can_rx_task(void *dummy)
 			id &= (~0x1C000000);//remove Priority bits
 
         /* Handle the message */
-        switch (id) { 
-	        case 0x422:
-	        debug_msg("RX 0x422\r\n");
-	        /* Send 0x423 in response */
-	        /* Could re-use received payload, but doing memcpy */
-	        memcpy(can_data, &pMsg->data, 8);
-	        can_send(0x423, can_data);
-	        break;
-	        case 0xEF01AA: //from AA to AS01
-	        debug_msg("RX from AA(0x18EF01AA)\r\n");
-	        /* Send 0x18EFAA01 in response */
-	        /* Could re-use received payload, but doing memcpy */
-	        memcpy(can_data, &pMsg->data, 8);
-	        can_send(0x18EFAA01, can_data);
-	        break;
-            default:
+		if(!pMsg->R0.bit.XTD) //Standard ID message
+		{
+			switch (id) { 
+				case 0x422:
+					debug_msg("RX 0x422\r\n");
+					/* Send 0x423 in response */
+					/* Could re-use received payload, but doing memcpy */
+					memcpy(can_data, &pMsg->data, 8);
+					can_send(0x423, can_data);
+				break;
+				default:
+					debug_msg("RX! SID = ");
+					printhex(id, 0);
+					if (verbose_rx_dump) {
+						debug_msg(" : ");
+						for (i = 0; i < 7; i++) {
+							printhex(pMsg->data[i], 0);
+							debug_msg(" ");
+						}
+						printhex(pMsg->data[7], CRLF);
+					}
+				break;
+			}
+		}
+		else //extended ID message
+		{
+			uint16_t pgn = ((uint16_t)(pMsg->R0.bit.ID >> 8));
+			if( pgn == 0xEEFF )	/* J1939 Network Management - Address Claim or Cannot Claim*/
+			{
+				if(	(pMsg->R0.bit.ID & 0x000000FF) == SENSOR_SA) //Another CA is claiming this address
+				{
+					set_contesting_NAME(pMsg->data);
+					J1939_NetworkMgmt_IncomingAddressClaim();
+				}
+		//		else if( (can_msg->can_msg_id & 0x0000FF) == 0xFE){} //Cannot claim. Don't care, least for now.
+			}
+			else if( ((pgn >> 8) & 0xFF) == 0xEA &&	/* J1939 Network Management - Request for Addresses already Claimed. */
+					(pMsg->data[0] == 0x00 &&
+					 pMsg->data[1] == 0xEE &&
+					 pMsg->data[2] == 0x00) )
+			{
+				if(	(pgn & 0xFF) == 0xFF ||	//Global request, everyone replies
+					(pgn & 0xFF) == SENSOR_SA )  //Specific address only needs to reply
+				{
+					J1939_NetworkMgmt_IncomingRequestforAddressesClaimed();
+				}
+			}
+			else if( (pMsg->R0.bit.ID & ~0x1C000000) == 0xEF01AA) //from AA to AS01
+			{
+				debug_msg("RX from AA(0x18EF01AA)\r\n");
+				/* Send 0x18EFAA01 in response */
+				/* Could re-use received payload, but doing memcpy */
+				memcpy(can_data, &pMsg->data, 8);
+				can_send(0x18EFAA01, can_data);
+				switch(pMsg->data[0]){
+					case 0x10: //Transmit rate
+						//update sensor transmit rate to Auto Agent
+					break;
+					case 0x11: //AutoSensor Firmware update
+					 //get ready to receive firmware update
+					break;
+					case 0x12: //General information request 
+						
+					break;
+				}
+			}
+			else{
                 debug_msg("RX! ID = ");
                 printhex(id, 0);
                 if (verbose_rx_dump) {
@@ -319,9 +366,11 @@ static void can_rx_task(void *dummy)
                     }
                     printhex(pMsg->data[7], CRLF);
                 }
+			}
         }
         can_msg_free(index);
     }
+	vTaskDelete(rxTaskHandle); //should never get here, but if it does... free its resources.
 }
 
 /*
@@ -491,10 +540,10 @@ void do_j1939addressarbitration(void)
 	/* Make sure we're initialized */
 	can_startup();
 	
-	J1939_AddressArbitration_WaitforECMAddrClaim(250);
+	J1939_AddressArbitration_RequestAutoAgentAddrClaim(250);
 	//J1939_NetworkMgmt_AddressClaim();
-
 }
+
 void do_j1939AddressClaim(void)
 {
 	debug_msg("J1939 bus arbitration called!\r\n");
@@ -777,14 +826,14 @@ int do_baud(int baud)
 /* 
  * Starts 'can_rx_task'.  
  */
-void do_start_reader(void)
+void do_start_reader_task_init(void)
 {
-    xTaskCreate(can_rx_task,  
-        "CAN_Rx", 
-        configMINIMAL_STACK_SIZE *3, 
-        (void *) 0,                           /* The parameter passed to the task */
-        tskIDLE_PRIORITY + 1,                 /* The priority assigned to the task. */
-        &rxTaskHandle	                      /* Not used.  Just illustrates creating sync handle */
+    xTaskCreate(can_rx_task,				/* Task entry point. */
+        "CAN_Rx",							/* Task name */
+        configMINIMAL_STACK_SIZE *3,		/* Stack size */
+        (void *) 0,                         /* The parameter passed to the task */
+        tskIDLE_PRIORITY + 1,               /* The priority assigned to the task. */
+        &rxTaskHandle	                    /* Not used.  Just illustrates creating sync handle */
     );	
 }
 
@@ -806,7 +855,7 @@ int dispatch_cmd(char *cmd)
             do_can_init();
             break;
         case CMD_READER:
-            do_start_reader();
+            do_start_reader_task_init();
             break;
         case CMD_SEND:
             do_send_loop(1);

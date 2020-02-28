@@ -52,11 +52,13 @@ int J1939Send_Conn_Abort(uint8_t reason, uint32_t PGN);
 
 extern int getJ1939can_dev(int id);
 extern void fetchBoardSerialNumber(char *serial);
+extern uint32_t Buf2UIntLSB(unsigned char *buff, int length);
 
 /* Get current time in ms adding a constant offset (in ms) */
 #define A_GET_MS(offset)   ((microtimer_read() >> 5) + (offset))
 #define DelayMS(ms)        (ms / portTICK_PERIOD_MS))
 
+TaskHandle_t J1939NMT_TaskHandle = (TaskHandle_t) 0;
 
 void J1939_Set_Priority(int priority)
 {
@@ -76,26 +78,10 @@ int J1939_AddressArbitration(void)
 	else
 		return RETURN_ERROR;
 }
-int J1939_AddressArbitration_WaitforECMAddrClaim(unsigned int timeout)
+
+int8_t getJ1939addressclaimed(void)
 {
-	int status;
-	int status_tx;
-	unsigned char rxbuffer[0x8];
-	unsigned int PGN_AddrClaim = 0x00EE00;
-
-	J1939_ClearRXdmsgs();
-//	status_tx = J1939_SendPGNRequest(PGN_AddrClaim, 0xFF, 0xFE); //Request for all claims on J1939 bus);
-	status_tx = J1939_SendPGNRequest(PGN_AddrClaim, AA_SA, 0xFE); //Request for only Auto Agent on J1939 bus);
-	status = J1939_Receive(PGN_AddrClaim, 0xFF, AA_SA, rxbuffer, timeout); //Waiting for the AA(addr 0xAA) to respond
-	if(status > 0){
-		status = SUCCESS;
-	}else{
-		debug_msg("J1939_AddrClaim check for AA fail: tx status ");
-		printhex(status_tx, 1);
-	}
-
-
-	return status;
+	return J1939addressclaimed;
 }
 
 void J1939_InitializeNAME(void)
@@ -108,21 +94,46 @@ void J1939_InitializeNAME(void)
 	AS_NAME = (AS_NAME & 0xFFFFFFFFFFE00000LL) | (TEMP & 0x1FFFFF);
 }
 
-//extern int32_t HexString2Long(char *ascii, int radix);
-extern uint32_t Buf2UIntLSB(unsigned char *buff, int length);
+void set_contesting_NAME(uint8_t* buffer)
+{
+	contesting_NAME = Buf2UIntLSB(buffer, 4);
+	contesting_NAME |= ((uint64_t)Buf2UIntLSB(buffer+4, 4) << 32);
+}
+
+/*Request Auto Agent's NAME from its source address*/ 
+int J1939_AddressArbitration_RequestAutoAgentAddrClaim(unsigned int timeout)
+{
+	int status;
+	int status_tx;
+	unsigned char rxbuffer[0x8];
+	unsigned int PGN_AddrClaim = 0x00EE00;
+
+	J1939_ClearRXdmsgs();
+//	status_tx = J1939_SendPGNRequest(PGN_AddrClaim, 0xFF, 0xFE); //Request for all claims on J1939 bus);
+	status_tx = J1939_SendPGNRequest(PGN_AddrClaim, 0/*AA_SA*/, 0xFE); //Request for only Auto Agent on J1939 bus);
+	status = J1939_Receive(PGN_AddrClaim, 0xFF, 0/*AA_SA*/, rxbuffer, timeout); //Waiting for the AA(addr 0xAA) to respond
+	if(status > 0){
+		status = SUCCESS;
+	}else{
+		debug_msg("J1939_AddrClaim check for AA fail: tx status ");
+		printhex(status_tx, 1);
+	}
+	return status;
+}
+
 int8_t J1939_NetworkMgmt_AddressClaim(void)
 {
 	int status = SUCCESS;
 	uint64_t othertool_NAME = 0;
 //	unsigned int PGN_AddrClaim = 0x00EE00;
-	unsigned char AS_name[8];
+	unsigned char AS_namebuffer[8];
 	unsigned char rxbuffer[0x8];
     int i;
     uint randomdelay;
 
     //No need to reclaim address
-//    if(J1939addressclaimed == J1939_ADDRESSCLAIMED)
-//    	return J1939_ADDRESSCLAIMED;
+    if(J1939addressclaimed == J1939_ADDRESSCLAIMED)
+      	return J1939_ADDRESSCLAIMED;
 
     if(J1939addressclaimed == J1939_NOTINITIALIZED)
     {
@@ -131,10 +142,9 @@ int8_t J1939_NetworkMgmt_AddressClaim(void)
 
 	for(i=0; i<8; i++)
 	{
-		AS_name[i] = AS_NAME >> (i*8);
+		AS_namebuffer[i] = AS_NAME >> (i*8);
 	}
 	
-
 	J1939_ClearRXdmsgs();
 	/* PGN 0xEA00 (59904): PGN data Request for Address Claimed. Data: 0x00EE00 PGN 60928 - Address claimed
 	 * Request to see if AA source address has already been claimed.
@@ -149,14 +159,13 @@ int8_t J1939_NetworkMgmt_AddressClaim(void)
 		/* PGN 0xEE00 (60928): Address Claimed.  Data: NAME - 64 bit controller descriptor
 		 * Request to claim address.
 		 */
-		J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_name, 8); //Sent to global address from desired source address
+		J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_namebuffer, 8); //Sent to global address from desired source address
 
 		/* wait for address already claimed response, else assume it is ours */
 		status = J1939_ReceivePacket(0x00EEFF00 | SENSOR_SA, rxbuffer, 250);	//Not required to wait 250ms, but do anyway
 		if(status == SUCCESS)	//Packet received, check for lower/equal NAME priority and try another address
 		{
-			othertool_NAME = Buf2UIntLSB(rxbuffer, 4);
-			othertool_NAME |= ((uint64_t)Buf2UIntLSB(rxbuffer+4, 4) << 32);
+			set_contesting_NAME(rxbuffer);
 			if(AS_NAME > othertool_NAME) //we don't have priority, choose another.
 			{
 				if(SENSOR_SA >= 0xFD){ //exhausted all options, fail.
@@ -166,7 +175,7 @@ int8_t J1939_NetworkMgmt_AddressClaim(void)
 					randomdelay = rand() & 0xFF;
 					randomdelay *= 600; //rand * 600 = delay in microseconds (.6ms is max time to send one message)
 					microtimer_delayus(randomdelay);
-					J1939_Send(0x00EE00, 0xFF, 0xFE, AS_name, 8); //Sent to global address from NULL address
+					J1939_Send(0x00EE00, 0xFF, 0xFE, AS_namebuffer, 8); //Sent to global address from NULL address
 					//Send new address claim after another random delay
 					randomdelay = rand() & 0xFF;
 					randomdelay *= 600; //rand * 600 = delay in microseconds (.6ms is max time to send one message)
@@ -184,144 +193,134 @@ int8_t J1939_NetworkMgmt_AddressClaim(void)
 	return J1939addressclaimed;
 }
 
-int8_t getJ1939addressclaimed(void)
-{
-	return J1939addressclaimed;
-}
-
-void set_contesting_NAME(uint8_t* buffer)
-{
-	contesting_NAME = Buf2UIntLSB(buffer, 4);
-	contesting_NAME |= ((uint64_t)Buf2UIntLSB(buffer+4, 4) << 32);
-}
-
 //extern NU_MEMORY_POOL *WiTune_Memory_Pool;
 //static NU_TASK J1939_NetworkMgmt_Task;
 //static NU_EVENT_GROUP J1939NetworkMgmtEvents;
 //#define J1939_NetworkMgmt_STACKSIZE 3000
 //#define J1939_NetworkMgmt_PRIORITY 15
-//
-//#define J1939_NetworkMgmt_ADDCLAIM		1<<0
-//#define J1939_NetworkMgmt_REQADDCLAIM	1<<1
-//
-//VOID J1939_NetworkMgmt_Task_Entry(UNSIGNED argc, VOID *argv)
-//{
-	//int status;
-	//UNSIGNED vec=0;
-	//uint i;
-	//unsigned char AS_NAME[8];
-	//uint64_t contesting_NAME_copy;
-    //uint randomdelay;
-//
-////	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt_Task_Entry!\r\n");
-//
-	//status = NU_Create_Event_Group(&J1939NetworkMgmtEvents, "J1939NME");
-////	if(status != 0)
-////		//WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task_Entry, fail to create group %d\r\n", status);
-//
-    //if(J1939addressclaimed == J1939_NOTINITIALIZED)
-    //{
-    	//J1939_InitializeNAME();
-    //}
-//
-	//for(i=0; i<8; i++)
-	//{
-		//AS_NAME[i] = AS_NAME>>(i*8);
-	//}
-//
-	//while(1)
-	//{
-		////vec=0;
-		//status = NU_Retrieve_Events(&J1939NetworkMgmtEvents, -1, NU_OR_CONSUME, &vec, NU_SUSPEND);
-////		//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt_Task LOOP: status %d vec 0x%.8X\r\n", status, vec);
-		//if(status == SUCCESS)
-		//{
-			//if (vec & J1939_NetworkMgmt_ADDCLAIM)  //in PSTATE_RUN, _DISABLED, or any state really.
-			//{
-				//if(J1939addressclaimed == J1939_ADDRESSCLAIMED) //check if we already have an address and need to reply
-				//{
-					//contesting_NAME_copy = contesting_NAME; //so it is not overwritten
-////				    //WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Found another device using SA!\r\n"
-////				    		"SENSOR_SA 0x%X AS_NAME 0x%.16llX other_NAME 0x%.16llX\r\n", SENSOR_SA, AS_NAME, contesting_NAME_copy);
-//
-					//randomdelay = rand() & 0xFF;
-					//randomdelay *= 600; //rand * 600 = delay in microseconds (.6ms is max time to send one message)
-					//microtimer_delayus(randomdelay);
-//
-					//if(contesting_NAME_copy <= AS_NAME) //other CA has priority
-					//{
-////						//WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Lost NAME priority, sending cannot claim address\r\n");
-						//J1939_Send(0x00EE00, 0xFF, 0xFE, AS_NAME, 8); //Sent to global address from NULL address
-						//J1939addressclaimed = J1939_CANNOTCLAIMADDRESS;
-						//randomdelay = rand() & 0xFF;
-						//randomdelay = randomdelay * 6 / 100; //rand * .06 = delay in hundredths of seconds (.6ms is max time to send one message)
-						//microtimer_delayus(randomdelay);
-						//++SENSOR_SA;
-						////WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Starting Address claim process again with SA: 0x%.2X\r\n", SENSOR_SA);
-						//J1939_NetworkMgmt_AddressClaim();
-						////J1939addressclaimed = J1939_NOTINITIALIZED;
-					//}
-					//else	//we have priority and resend address claim message
-					//{
-						////WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: We have priority! Resending claim msg\r\n");
-						//J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_NAME, 8); //Sent to global address from desired source address
-					//}
-				//}
-			//}
-			//if (vec & J1939_NetworkMgmt_REQADDCLAIM)
-			//{
-				//if(J1939addressclaimed == J1939_ADDRESSCLAIMED) //check if we already have an address and need to reply
-				//{
-					////WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Someone requesting our NAME to address claim.\r\n");
-					//J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_NAME, 8); //Sent to global address from claimed source address
-				//}
-//
-			//}
-		//}
-	//}
-//}
-//
-//int J1939_NetworkMgmt_Task_Init(void)
-//{
-	//VOID *pointer;
-	//int status;
-//
-	//status = NU_Task_Information(&J1939_NetworkMgmt_Task, "J1939NMT",
-						//NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-////	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt_Task_Init: Check for existing task: %d\r\n", status);
-	//if(status != NU_INVALID_TASK) //Task already exists
-		//return status;
-//
-	//status = NU_Allocate_Memory(WiTune_Memory_Pool, &pointer,
-			//J1939_NetworkMgmt_STACKSIZE, NU_NO_SUSPEND);
-	//if (status != SUCCESS)
-		//return(status);
-//
-	///* Create the task  */
-	//status = NU_Create_Task(&J1939_NetworkMgmt_Task, "J1939NMT",
-		//J1939_NetworkMgmt_Task_Entry, 0, NU_NULL, pointer,
-		//J1939_NetworkMgmt_STACKSIZE, J1939_NetworkMgmt_PRIORITY, 0, NU_PREEMPT, NU_START);
-//
-	///* If previous operation was not successful */
-	//if(status != SUCCESS)
-	//{
-		//(VOID)NU_Deallocate_Memory(pointer);
-	//}
-	//return (status);
-//}
-//
-//void J1939_NetworkMgmt_IncomingAddressClaim(void)
-//{
-////	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt: Address Claimed 0x%X\r\n", J1939_NetworkMgmt_ADDCLAIM);
-	//NU_Set_Events(&J1939NetworkMgmtEvents, J1939_NetworkMgmt_ADDCLAIM, NU_OR);
-//}
-//
-//void J1939_NetworkMgmt_IncomingRequestforAddressesClaimed(void)
-//{
-////	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt: Request for addresses claimed 0x%X\r\n", J1939_NetworkMgmt_REQADDCLAIM);
-	//NU_Set_Events(&J1939NetworkMgmtEvents, J1939_NetworkMgmt_REQADDCLAIM, NU_OR);
-//}
-//
+
+#define J1939_NetworkMgmt_ADDCLAIM		1<<0
+#define J1939_NetworkMgmt_REQADDCLAIM	1<<1
+
+    /* Declare a variable to hold the created event group. */
+    EventGroupHandle_t J1939NetworkMgmtEvents;
+
+	
+void J1939_NetworkMgmt_Task_Entry(void *argv)
+{
+//	uint vec=0;
+	uint i;
+	uint32_t ulFlagValue;
+	BaseType_t xResult;
+	unsigned char AS_namebuffer[8];
+	uint64_t contesting_NAME_copy;
+    uint randomdelay;
+//	uint8_t J1939NetworkMgmtEvents = 0;
+	
+	debug_msg("J1939_NetworkMgmt_Task_Entry!\r\n");
+
+
+    /* Attempt to create the event group. */
+    J1939NetworkMgmtEvents = xEventGroupCreate();
+    if( J1939NetworkMgmtEvents == NULL )
+    {
+        /* The event group was not created because there
+		was insufficient FreeRTOS heap available. */
+		debug_msg("J1939_NetworkMgmt_Task_Entry, fail to create group\r\n");
+    }
+	
+    if(J1939addressclaimed == J1939_NOTINITIALIZED)
+    {
+    	J1939_InitializeNAME();
+    }
+
+	for(i=0; i<8; i++)
+	{
+		AS_namebuffer[i] = AS_NAME >> (i*8);
+	}
+
+	while(1)
+	{	
+		/* Wait to be notified of a flag. */
+		xResult = xTaskNotifyWait(
+		pdFALSE,		  /* Don't clear bits on entry. */
+		-1,        /* Clear all bits on exit. */
+		&ulFlagValue,	  /* Stores the notified value. */
+		portMAX_DELAY );
+		
+		//vec = xEventGroupWaitBits(J1939NetworkMgmtEvents, -1, pdTRUE, pdFALSE, portMAX_DELAY);
+		debug_msg("J1939_NetworkMgmt_Task Running! flags ");
+		printhex(ulFlagValue, 1);
+		if (ulFlagValue & J1939_NetworkMgmt_ADDCLAIM)  //in PSTATE_RUN, _DISABLED, or any state really.
+		{
+			if(1)//J1939addressclaimed == J1939_ADDRESSCLAIMED) //check if we already have an address and need to reply
+			{
+				contesting_NAME_copy = contesting_NAME; //so it is not overwritten
+//				    //WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Found another device using SA!\r\n"
+//				    		"SENSOR_SA 0x%X AS_NAME 0x%.16llX other_NAME 0x%.16llX\r\n", SENSOR_SA, AS_NAME, contesting_NAME_copy);
+
+				randomdelay = rand() & 0xFF;
+				randomdelay *= 600; //rand * 600 = delay in microseconds (.6ms is max time to send one message)
+				microtimer_delayus(randomdelay);
+
+				if(contesting_NAME_copy <= AS_NAME) //other CA has priority
+				{
+					debug_msg("J1939_NetworkMgmt_Task: Lost NAME priority, sending cannot claim address\r\n");
+					J1939_Send(0x00EE00, 0xFF, 0xFE, AS_namebuffer, 8); //Sent to global address from NULL address
+					J1939addressclaimed = J1939_CANNOTCLAIMADDRESS;
+					randomdelay = rand() & 0xFF;
+					randomdelay = randomdelay * 6 / 100; //rand * .06 = delay in hundredths of seconds (.6ms is max time to send one message)
+					microtimer_delayus(randomdelay);
+					++SENSOR_SA;
+					//WiTune_Log(LOGLEV_INFO, "J1939_NetworkMgmt_Task: Starting Address claim process again with SA: 0x%.2X\r\n", SENSOR_SA);
+					J1939_NetworkMgmt_AddressClaim();
+					//J1939addressclaimed = J1939_NOTINITIALIZED;
+				}
+				else	//we have priority and resend address claim message
+				{
+					debug_msg("J1939_NetworkMgmt_Task: We have priority! Resending claim msg\r\n");
+					J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_namebuffer, 8); //Sent to global address from desired source address
+				}
+			}
+		}
+		if (ulFlagValue & J1939_NetworkMgmt_REQADDCLAIM)
+		{
+			if(1)//J1939addressclaimed == J1939_ADDRESSCLAIMED) //check if we already have an address and need to reply
+			{
+				debug_msg("J1939_NetworkMgmt_Task: Someone requesting our NAME to address claim.\r\n");
+				J1939_Send(0x00EE00, 0xFF, SENSOR_SA, AS_namebuffer, 8); //Sent to global address from claimed source address
+			}
+		}
+	}//while(1)
+	
+	vTaskDelete(J1939NMT_TaskHandle);
+}
+
+void J1939_NetworkMgmt_Task_Init(void)
+{
+	xTaskCreate(J1939_NetworkMgmt_Task_Entry,	/* Task entry point. */
+	"J1939NMT",							/* Task name */
+	configMINIMAL_STACK_SIZE *3,		/* Stack size */
+	NULL,								/* The parameter passed to the task */
+	tskIDLE_PRIORITY + 1,               /* The priority assigned to the task. */
+	&J1939NMT_TaskHandle	            /* Not used.  Just illustrates creating sync handle */
+	);
+}
+
+void J1939_NetworkMgmt_IncomingAddressClaim(void)
+{
+//	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt: Address Claimed 0x%X\r\n", J1939_NetworkMgmt_ADDCLAIM);
+//	xEventGroupSetBits(J1939NetworkMgmtEvents, J1939_NetworkMgmt_ADDCLAIM);
+	xTaskNotify( J1939NMT_TaskHandle, J1939_NetworkMgmt_ADDCLAIM, eSetBits );
+}
+
+void J1939_NetworkMgmt_IncomingRequestforAddressesClaimed(void)
+{
+//	//WiTune_Log(LOGLEV_DBG, "J1939_NetworkMgmt: Request for addresses claimed 0x%X\r\n", J1939_NetworkMgmt_REQADDCLAIM);
+//	xEventGroupSetBits(J1939NetworkMgmtEvents, J1939_NetworkMgmt_REQADDCLAIM);
+	xTaskNotify( J1939NMT_TaskHandle, J1939_NetworkMgmt_REQADDCLAIM, eSetBits );
+}
+
 
 int J1939_Request_Data_Transfer(uint32_t PDU, unsigned char* data)
 {
@@ -500,7 +499,7 @@ int J1939_ReceiveTP_EndofMsgACK(unsigned int rxEID, uint32_t PGN, uint16_t* tota
 int J1939Send_Conn_Abort(uint8_t reason, uint32_t PGN)
 {
 	int status = SUCCESS;
-	//UNSIGNED    events = 0;
+	//uint    events = 0;
 	J1939_Tx_Packet.data[0] = 0xFF; 		//Control byte = 255, Connection Abort
 	J1939_Tx_Packet.data[1] = reason;		//Connection Abort reason; 3 - timeout
 	J1939_Tx_Packet.data[2] = 0xFF;		//Reserved for assignment by SAE, these bytes should be filled with FF
@@ -520,7 +519,7 @@ int J1939Send_Conn_Abort(uint8_t reason, uint32_t PGN)
 int J1939_SendPGNRequest(unsigned int PGN, unsigned char destination, unsigned char source)
 {
 	int      status = SUCCESS;
-	//UNSIGNED    events = 0;
+	//uint    events = 0;
 
 	J1939_Tx_Packet.T0.bit.ID = 0xEA0000 | (((unsigned int)destination)<<8) | source | (J1939_defaultPriority << 26);
 	J1939_Tx_Packet.T0.bit.XTD = 1; //CAN_EXTENDED_ID;
@@ -831,4 +830,34 @@ int J1939_Receive(unsigned int PGN, unsigned char destination, unsigned char sou
 void J1939_ClearRXdmsgs(void)
 {
 	can_reset_fifo();
+}
+
+void send_GeneralInfo(void)
+{
+	/*
+	PGN 0x00FF00 + SA(source address of the AS).
+	Byte 1:		0x12 - Information message ID
+	Byte 2-3:	Current firmware version
+	Byte 4-5:	Current transmit rate in ms
+	Byte 6: 	Number of sensors connected
+	Byte 7:		Reserved
+	Byte 8:		Reserved
+	*/
+}
+
+void send_SensorData(void)
+{
+	/*
+	PGN 0x00FF01 + SA(source address of the AS).
+	Byte 1.1-1.4:	data type (0 - currently only one data type)
+	Byte 1.5-1.6: 	sensor number (0-3)
+	Byte 1.7-1.8: 	reserved
+	Byte 2: 	    reserved
+	Byte 3-4:	    sensor data (0 - 65535)
+	Byte 5.1-5.4:	data type (0 - currently only one data type)
+	Byte 5.5-5.6: 	sensor number (0-3)
+	Byte 5.7-5.8: 	reserved
+	Byte 6: 	    reserved
+	Byte 7-8:	    sensor data (0 - 65535)
+	*/
 }
